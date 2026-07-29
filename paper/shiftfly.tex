@@ -1,405 +1,456 @@
-\documentclass[11pt,a4paper]{article}
+\documentclass[sigconf,nonacm]{acmart}
 
-\usepackage[margin=1in]{geometry}
-\usepackage{amsmath,amssymb,amsthm}
-\usepackage{graphicx}
+% acmart already loads amsmath, amssymb and amsthm, and defines the theorem
+% environments used below.  Loading them again clashes on \Bbbk.
 \usepackage{booktabs}
-\usepackage[dvipsnames]{xcolor}
-\usepackage{hyperref}
-\usepackage{microtype}
+\usepackage{balance}
+\usepackage{graphicx}
 
-\hypersetup{colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black,
-            citecolor=blue!50!black}
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
 
-\newtheorem{theorem}{Theorem}
-\newtheorem{proposition}[theorem]{Proposition}
-\newtheorem{lemma}[theorem]{Lemma}
-\theoremstyle{definition}
-\newtheorem{definition}[theorem]{Definition}
-\newtheorem{remark}[theorem]{Remark}
+% acmart supplies theorem/lemma/proposition/definition/corollary, but creates
+% their counters at \begin{document}, so these must be deferred to share them.
+\AtBeginDocument{%
+  \theoremstyle{acmdefinition}%
+  \newtheorem{observation}[theorem]{Observation}%
+  \newtheorem{remark}[theorem]{Remark}%
+}
 
-\newcommand{\N}{\mathbb{N}}
 \newcommand{\Z}{\mathbb{Z}}
+\newcommand{\E}{\mathbb{E}}
 \newcommand{\diam}{\operatorname{diam}}
 \newcommand{\dist}{\operatorname{d}}
-
-\title{\textbf{Shiftfly}\\[0.3em]
-\large A shift-routed interconnect for accelerator fabrics beyond pod scale}
-\author{Eylon E. Krause}
-\date{}
+\newcommand{\lcs}{\operatorname{lcs}}
 
 \begin{document}
-\maketitle
+
+\title{Shiftfly: Scaling the Accelerator Interconnect Past the Pod with a
+       Shift-Routed Optical Tier}
+
+\author{Eylon E. Krause}
+\affiliation{%
+  \institution{Weizmann Institute of Science}
+  \city{Rehovot}
+  \country{Israel}}
+\email{eylon1909@gmail.com}
 
 \begin{abstract}
-Google's TPU interconnect spent nine generations as a Cayley graph of an
-abelian group---a $k$-ary $n$-cube whose diameter grows as $\Theta(N^{1/n})$---
-before TPU~8i replaced it with \emph{Boardfly}, a three-tier fully connected
-hierarchy of Dragonfly type with diameter $7$ over $1{,}152$ chips. We first
-audit every shipped TPU topology against the Moore bound and show that at
-TPU-class radix ($\Delta \approx 7$) a diameter-$7$ graph could in principle
-hold $391{,}910$ chips, so Boardfly spends its diameter budget roughly two
-orders of magnitude below the ceiling. We then observe that Boardfly's global
-tier is \emph{fully connected}, which does not scale: at $400{,}000$ chips a
-group would need $12{,}499$ optical links, so a further hierarchy level must be
-stacked and diameters add.
+Google's TPU interconnect spent nine generations as a Cayley graph of an abelian
+group---a $k$-ary $n$-cube whose diameter grows as $\Theta(N^{1/n})$---before
+TPU~8i replaced it with \emph{Boardfly}, a three-tier hierarchy in which every
+tier is a complete graph and the pod diameter is~$7$ over $1{,}152$ chips.
+Boardfly is well matched to a single inference pod. It does not extend: its
+global tier is a complete graph on groups, so reaching $G$ groups costs $G-1$
+optical ports, and a $400{,}000$-chip machine would need $12{,}499$ per group
+against the $40$ available. Another hierarchy level must therefore be stacked,
+and each level costs four chip hops.
 
-We propose \textbf{Shiftfly}: retain Boardfly's cheap local structure and
-replace the fully connected global tier with a generalized Kautz digraph
-realised on the existing optical circuit switch. At an identical budget of
-$40$ optical ports per group, Shiftfly is a flat graph of guaranteed diameter
-$\lceil \log_{d} G\rceil$ over $G$ groups, routes without tables by a shift
-register, and admits content addressing natively.
+We propose \textbf{Shiftfly}, which retains Boardfly's building block and group
+verbatim and replaces only the global tier with a generalized Kautz digraph,
+installed as a fixed permutation on the optical circuit switch that the fabric
+already owns. At an identical budget of $40$ optical ports per group, Shiftfly
+is a flat graph of guaranteed diameter $\lceil\log_d G\rceil$, routes without
+tables by a shift register, and addresses content natively.
 
-Our evaluation is deliberately two-sided. Shiftfly loses at one-pod scale---
-Boardfly achieves chip-level diameter $7$ where Shiftfly needs $11$---and wins
-beyond it, with lower diameter, lower mean distance and roughly $2.7\times$
-better spectral expansion at equal optical cost. The redundancy result is
-mostly negative: locality-aware \emph{placement} accounts for the large
-majority of the achievable saving on shared content, and it helps both
-topologies, leaving Shiftfly's algebraic path-merging worth only a few percent.
-We report the metric trap that conceals this, state the failure modes, and
-argue that the honest case for Shiftfly is scaling and expansion, not
-deduplication.
+Our evaluation is deliberately two-sided. Shiftfly \emph{loses} at one-pod
+scale---Boardfly achieves chip-level diameter $7$ where Shiftfly needs $11$---
+and wins beyond it, reducing worst-case distance from $23$ to $19$ hops at
+$400{,}000$ chips with roughly $2.7\times$ better spectral expansion at equal
+optical cost. The redundancy argument that motivated the design does not
+survive its own evaluation: locality-aware \emph{placement} accounts for
+$21.5\%$ and $14.5\%$ of the achievable saving on shared content on the two
+topologies respectively, leaving the shift algebra a residual of $2.9\%$. We
+report the metric inversion that conceals this, and conclude that the defensible
+case for Shiftfly is scaling and expansion rather than deduplication.
 \end{abstract}
 
-\tableofcontents
+\begin{CCSXML}
+<ccs2012>
+<concept><concept_id>10003033.10003034.10003035</concept_id>
+<concept_desc>Networks~Network design principles</concept_desc>
+<concept_significance>500</concept_significance></concept>
+<concept><concept_id>10003033.10003034.10003039</concept_id>
+<concept_desc>Networks~Data center networks</concept_desc>
+<concept_significance>500</concept_significance></concept>
+<concept><concept_id>10010520.10010521.10010528</concept_id>
+<concept_desc>Computer systems organization~Interconnection
+architectures</concept_desc>
+<concept_significance>300</concept_significance></concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Networks~Network design principles}
+\ccsdesc[500]{Networks~Data center networks}
+\ccsdesc[300]{Computer systems organization~Interconnection architectures}
+
+\keywords{interconnection networks, network topology, degree--diameter problem,
+Kautz digraphs, optical circuit switching, machine-learning accelerators}
+
+\maketitle
 
 %======================================================================
 \section{Introduction}
 
-An accelerator interconnect is a graph, and the quantities that matter---worst
-case latency, average latency, bandwidth under adversarial traffic, behaviour
-under failure---are graph invariants: diameter, mean distance, bisection width
-and connectivity. This paper takes that view literally.
+An accelerator interconnect is a graph, and the quantities that decide whether a
+machine is usable---worst-case latency, average latency, throughput under
+adversarial traffic, behaviour under failure---are graph invariants: diameter,
+mean distance, bisection width, connectivity. This paper takes that view
+literally, applies it to every interconnect Google has shipped for its Tensor
+Processing Units, and proposes a change to the most recent one.
 
-Section~\ref{sec:review} catalogues every Google TPU topology as a graph.
-Section~\ref{sec:moore} measures each against the Moore bound, which yields the
-observation motivating the rest of the work. Section~\ref{sec:objective}
-formalises a second objective---the cost of delivering \emph{the same} content
-to many endpoints---because agentic inference makes a large fraction of traffic
-semantically redundant. Section~\ref{sec:construction} gives the construction,
-Section~\ref{sec:theory} its properties with proofs, Section~\ref{sec:eval} the
-measurements, and Section~\ref{sec:limits} the ways it is wrong.
+For nine generations the TPU interconnect was a torus. That was a defensible
+choice while the dominant traffic was nearest-neighbour: dense training stencils
+and ring all-reduce touch only adjacent chips, so the $\Theta(N^{1/3})$ diameter
+of a three-dimensional torus never reaches the critical path. Mixture-of-experts
+routing~\cite{shazeer2017moe} broke the assumption, because all-to-all traffic
+pays the diameter on every token. TPU~8i responded with \emph{Boardfly}, a
+Dragonfly-derived~\cite{kim2008dragonfly} hierarchy of complete graphs whose pod
+diameter is $7$ irrespective of where two chips sit~\cite{google2026tpu8}.
 
-The contribution is not the graph family. Kautz digraphs have been known to be
-near-optimal for the directed degree--diameter problem since 1968, and
-generalized de~Bruijn and Imase--Itoh digraphs have provided arbitrary-order
-versions since 1980--81. The contribution is the argument that this family is
-the right global tier for an accelerator fabric that already owns a
-reconfigurable optical switch, together with an honest measurement of what that
-buys and what it does not.
+Boardfly is a good answer to the question it was asked. We observe that it does
+not answer the next one. A complete graph on $G$ vertices requires degree
+$G-1$; a group has $40$ optical ports; a $400{,}000$-chip machine has $12{,}500$
+groups. The mechanism that gives Boardfly its diameter is precisely the
+mechanism that prevents it from scaling, and the standard remedy---stack another
+hierarchy level---costs four chip hops per level.
+
+\paragraph{Contributions.}
+\begin{itemize}
+\item We catalogue every shipped TPU interconnect as a graph and audit each
+against the Moore bound (\S\ref{sec:moore}). At TPU-class radix ($\Delta
+\approx 7$) a diameter-$7$ graph could in principle hold $391{,}910$ chips;
+Boardfly spends diameter $7$ on $1{,}152$.
+\item We give \textbf{Shiftfly} (\S\ref{sec:design}), which replaces only
+Boardfly's global tier with a generalized Kautz digraph on the existing optical
+circuit switch, at an unchanged port budget. We prove its diameter, its
+table-free routing rule, and a criterion under which requests for the same
+content merge inside the fabric (\S\ref{sec:analysis}).
+\item We identify a port-accounting error that would silently double Shiftfly's
+hardware if the comparison were done naively, and we prove the correct
+accounting (\S\ref{sec:ports}).
+\item We evaluate both designs at matched optical cost with a dependency-free
+simulator whose Boardfly model reproduces the published diameter of~$7$
+(\S\ref{sec:eval}). Shiftfly loses at pod scale and wins beyond it.
+\item We report a \textbf{negative result} (\S\ref{sec:sharing}): the redundancy
+argument that motivated the design is dominated by locality-aware placement,
+which is topology-agnostic. We also identify a metric inversion that would have
+concealed this had we reported the natural efficiency ratio alone.
+\end{itemize}
+
+All code, proofs and artefacts are public~\cite{krause2026shiftfly}. No
+proprietary information is used anywhere in this work; every TPU figure is drawn
+from public announcements, and quantities we infer rather than read are marked
+as inferred.
 
 %======================================================================
-\section{TPU topologies as graphs}
-\label{sec:review}
+\section{Background: TPU interconnects as graphs}
+\label{sec:background}
+
+\subsection{The torus era}
 
 \begin{definition}[$k$-ary $n$-cube]
-Let $k_1,\dots,k_n \ge 2$. The torus $T(k_1,\dots,k_n)$ is the Cayley graph of
+For $k_1,\dots,k_n \ge 2$, the torus $T(k_1,\dots,k_n)$ is the Cayley graph of
 $\Z_{k_1}\times\cdots\times\Z_{k_n}$ with generating set
 $\{\pm e_1,\dots,\pm e_n\}$.
 \end{definition}
 
 \begin{proposition}
-$T(k_1,\dots,k_n)$ has $N=\prod_i k_i$ vertices, is $2n$-regular when all
-$k_i>2$, and has
-\[
-  \diam T = \sum_{i=1}^{n}\left\lfloor k_i/2 \right\rfloor .
-\]
-In particular a cubic torus has $\diam T = \Theta\!\left(N^{1/n}\right)$.
+\label{prop:torus}
+$T(k_1,\dots,k_n)$ has $N=\prod_i k_i$ vertices, is $2n$-regular when every
+$k_i>2$, and $\diam T = \sum_{i}\lfloor k_i/2\rfloor$. A cubic torus therefore
+has $\diam T = \Theta(N^{1/n})$.
 \end{proposition}
 
 \begin{proof}
-Distance in a Cayley graph of an abelian group with this generating set is the
-sum of per-coordinate cyclic distances, and the cyclic distance in $\Z_k$ is
-maximised at $\lfloor k/2\rfloor$; the maximum is attained simultaneously in
-every coordinate.
+In a Cayley graph of an abelian group with this generating set, distance is the
+sum of per-coordinate cyclic distances; the cyclic distance in $\Z_k$ is
+maximised at $\lfloor k/2\rfloor$, and the maxima are simultaneously
+attainable.
 \end{proof}
 
-The exponent $1/n$ with $n=3$ is the worst scaling in common use, and it was
-the right choice while the dominant traffic was nearest-neighbour: dense
-training stencils and ring all-reduce touch only adjacent chips, so diameter
-never appears on the critical path. Mixture-of-experts routing broke the
-assumption. All-to-all traffic pays the diameter on every token.
-
-Table~\ref{tab:review} collects the generations. Diameters for torus
-generations are analytic; pod shapes for v5p, v7 and v8t are inferred from
-published chip counts and are marked accordingly.
+Table~\ref{tab:generations} lists the generations. Pod shapes for v5p, v7 and
+v8t are inferred from published chip counts and marked accordingly; the
+resulting diameters follow from Proposition~\ref{prop:torus}.
 
 \begin{table}[t]
-\centering
-\small
-\begin{tabular}{lrrrl}
+\centering\small
+\begin{tabular}{lrrr}
 \toprule
-Generation & Chips & $\Delta$ & $D$ & Structure \\
+Generation & Chips & $\Delta$ & $D$ \\
 \midrule
-v2 / v3 & 256 / 1{,}024 & 4 & 16 / 32 & Cayley graph of $\Z_k^2$\\
-v4 & 4{,}096 & 6 & 24 & $\Z_{16}^3$, $4^3$ cubes, OCS between cubes\\
-v5e / v6e & 256 & 4 & 16 & $\Z_{16}^2$\\
-v5p & 8{,}960 & 6 & $\approx 32$ & 3D torus (shape inferred)\\
-v7 Ironwood & 9{,}216 & 6 & $\approx 32$ & 3D torus; chiplets add a 4th logical axis\\
-v8t & 9{,}600 & 6 & $\approx 33$ & 3D torus, Virgo scale-out fabric\\
-\textbf{v8i} & \textbf{1{,}152} & \textbf{7} & \textbf{7} & \textbf{Boardfly}: 3-tier fully connected\\
+v2 / v3 (2D torus) & 256 / 1{,}024 & 4 & 16 / 32 \\
+v4 (3D torus, OCS between cubes) & 4{,}096 & 6 & 24 \\
+v5e / v6e (2D torus) & 256 & 4 & 16 \\
+v5p (3D torus)$^\dagger$ & 8{,}960 & 6 & ${\approx}32$ \\
+v7 Ironwood (3D torus)$^\dagger$ & 9{,}216 & 6 & ${\approx}32$ \\
+v8t (3D torus + Virgo)$^\dagger$ & 9{,}600 & 6 & ${\approx}33$ \\
+\textbf{v8i Boardfly} & \textbf{1{,}152} & \textbf{7} & \textbf{7} \\
 \bottomrule
 \end{tabular}
-\caption{Google TPU interconnects as graphs.}
-\label{tab:review}
+\caption{TPU interconnects as graphs. $^\dagger$Pod shape inferred from
+published chip counts.}
+\label{tab:generations}
 \end{table}
 
-\paragraph{Boardfly.} Google describes it as ``a building block of four fully
-connected chips into a fully connected group of eight boards, with 36 of such
-groups fully connected into a TPU~8i pod''. Thus a building block holds $4$
-chips, a group holds $8$ building blocks, i.e.\ $32$ chips, and a pod holds
-$36$ groups, i.e.\ $1{,}152$ chips. Each building block exposes $16$ external
-links of which $11$ serve the group in copper, leaving $5$ per building block
-and hence $40$ optical ports per group. Within a pod the $36$ groups are fully
-connected through the optical circuit switch, consuming $35$ of those $40$.
+\subsection{Boardfly}
 
-\begin{lemma}[Boardfly's diameter decomposition]
+Google describes Boardfly as ``a building block of four fully connected chips
+into a fully connected group of eight boards, with 36 of such groups fully
+connected into a TPU~8i pod''~\cite{google2026eighthgen}. A building block holds
+$4$ chips; a group holds $8$ building blocks, i.e.\ $32$ chips; a pod holds $36$
+groups, i.e.\ $1{,}152$ chips. Each building block exposes $16$ external links
+of which $11$ serve the group in copper, leaving $5$ per building block and
+hence $40$ optical ports per group. Within a pod the $36$ groups are fully
+connected through the Apollo optical circuit switch~\cite{poutievski2022jupiter},
+consuming $35$ of those $40$.
+
+\begin{lemma}[Diameter decomposition]
 \label{lem:seven}
 If the optical link between two groups terminates on one designated chip of one
 designated building block on each side, the chip-level pod diameter is $7$.
 \end{lemma}
 
 \begin{proof}
-Reaching the group's egress chip costs at most three hops: one inside the
-source building block, one across the copper link to the building block owning
-the optical port, one inside that building block. The optical hop is one. The
-destination side is symmetric. Hence $3+1+3=7$, and the bound is attained.
+Reaching a group's egress chip costs at most three hops: one inside the source
+building block, one across copper to the building block owning the optical port,
+one inside that block. The optical hop is one, and the destination side is
+symmetric, giving $3+1+3=7$; the bound is attained.
 \end{proof}
 
-We adopt Lemma~\ref{lem:seven}'s accounting throughout. Traversing $g$
-inter-group hops passes through $g+1$ groups, so
-
+We adopt this accounting throughout. Traversing $g$ inter-group hops passes
+through $g+1$ groups, so
 \begin{equation}
 \label{eq:chiphops}
-  \text{chip hops} \;=\; \iota\,(g+1) + g, \qquad \iota = 3 ,
+\text{chip hops} = \iota\,(g+1)+g, \qquad \iota=3,
 \end{equation}
-
-which reproduces $7$ at $g=1$. Our chip-level simulation of a Boardfly pod
-measures diameter exactly $7$, confirming the port model.
+which reproduces $7$ at $g=1$. Our simulated chip-level pod measures diameter
+exactly $7$, which is the check that the port model is faithful
+(\S\ref{sec:validation}).
 
 %======================================================================
-\section{The Moore-bound audit}
+\section{Motivation}
 \label{sec:moore}
 
-\begin{theorem}[Moore bound]
-A graph of maximum degree $\Delta \ge 3$ and diameter $D$ has
-\[
-  N \;\le\; 1 + \Delta\sum_{i=0}^{D-1}(\Delta-1)^i
-    \;=\; \frac{\Delta(\Delta-1)^{D}-2}{\Delta-2}.
-\]
+\subsection{The Moore-bound audit}
+
+\begin{theorem}[Moore bound~\cite{hoffman1960,miller2013degdiam}]
+A graph of maximum degree $\Delta\ge3$ and diameter $D$ satisfies
+$N \le 1+\Delta\sum_{i=0}^{D-1}(\Delta-1)^i$.
 \end{theorem}
 
 \begin{proof}
-Fix $v$. Breadth-first from $v$ reaches at most $\Delta$ vertices at distance
-$1$ and, since each subsequent vertex has at most $\Delta-1$ unused incident
-edges, at most $\Delta(\Delta-1)^{i-1}$ at distance $i$. Every vertex lies
-within distance $D$.
+Breadth-first search from any vertex reaches at most $\Delta$ vertices at
+distance $1$ and at most $\Delta(\Delta-1)^{i-1}$ at distance $i$, since each
+newly reached vertex has at most $\Delta-1$ unused incident edges; every vertex
+lies within $D$.
 \end{proof}
 
-Equality requires a Moore graph, and these exist only for $D=1$, for cycles,
-and for $D=2$ with $\Delta\in\{3,7,57\}$. The bound is therefore a ceiling, and
-the informative quantity is the ratio to it.
-
-At $\Delta=7$:
+Equality demands a Moore graph, and these exist only for $D=1$, for cycles, and
+for $D=2$ with $\Delta\in\{3,7,57\}$~\cite{hoffman1960}. The bound is a ceiling,
+so the informative quantity is the ratio to it. At $\Delta=7$:
 \[
-  \text{Moore}(7,4)=1{,}814,\quad
-  \text{Moore}(7,5)=10{,}886,\quad
-  \text{Moore}(7,6)=65{,}318,\quad
-  \text{Moore}(7,7)=391{,}910 .
+\text{Moore}(7,4)=1{,}814,\quad
+\text{Moore}(7,6)=65{,}318,\quad
+\text{Moore}(7,7)=391{,}910 .
 \]
 
-Two consequences. First, Boardfly attains diameter $7$ at $1{,}152$ chips,
-whereas $\Delta=7$ permits diameter $4$ at that order---so even at its own
-scale the design is about $1.75\times$ off. Second, and more importantly,
-$\Delta = 7$ admits diameter $7$ at almost exactly $400{,}000$ chips. Boardfly
-therefore spends, at pod scale, the diameter that would in principle serve a
-$400{,}000$-chip machine.
+\begin{observation}
+Boardfly attains diameter $7$ at $1{,}152$ chips, where $\Delta=7$ permits
+diameter $4$ at that order---a factor of ${\approx}1.75$. More strikingly,
+$\Delta=7$ admits diameter $7$ at almost exactly $400{,}000$ chips. Boardfly
+spends, at pod scale, the diameter budget that would in principle serve a
+machine two orders of magnitude larger.
+\end{observation}
 
-\begin{remark}
-This is not a claim that a $400{,}000$-chip diameter-$7$ machine is buildable.
-Moore-optimal graphs of large diameter are not known, and the bound ignores
-bisection, cabling length and fault tolerance---all of which Boardfly is buying
-with its slack. It is a claim that the slack is unusually large and worth
-interrogating.
-\end{remark}
+We are careful not to overclaim. Moore-optimal graphs of large diameter are not
+known, and the bound ignores bisection, cable length and fault tolerance---all
+of which Boardfly buys with its slack. The observation motivates inspection; it
+is not by itself an argument.
 
-\paragraph{The structural obstruction.} Boardfly's global tier is a complete
-graph $K_{36}$ on groups, so a group needs $G-1$ optical ports to reach $G$
-groups. With $G=12{,}500$ (i.e.\ $400{,}000$ chips at $32$ chips per group)
-this is $12{,}499$ ports against $40$ available. Full connectivity does not
-scale; another hierarchy level must be added, and by \eqref{eq:chiphops} each
-added level costs four chip hops. This is the weakness Shiftfly attacks.
+\subsection{The structural obstruction}
 
-%======================================================================
-\section{Two objectives}
-\label{sec:objective}
-
-Latency is the standard objective: minimise $\diam G$ and the mean distance
-$\bar{\dist}(G)$. The second objective is specific to agentic inference, where
-one user query fans out into many concurrent rollouts that share a system
-prompt, tool definitions and retrieved context, and therefore request the
-\emph{same} content.
-
-\begin{definition}[Multicast cost]
-Let $h$ be the home vertex of a content item and $S$ the set of requesters. The
-\emph{unicast cost} is $U(S,h)=\sum_{v\in S}\dist(v,h)$. The \emph{tree cost}
-$T(S,h)$ is the number of edges in the union of shortest paths from each $v\in
-S$ to $h$, i.e.\ what a fabric with in-network replication pays. The
-\emph{multicast efficiency} is $\eta(S,h)=U(S,h)/T(S,h)$.
-\end{definition}
-
-\begin{remark}[A metric trap]
-\label{rem:trap}
-$\eta$ must not be optimised alone. It is a ratio, and a topology is rewarded
-for placing requesters \emph{far} from the home vertex provided their paths
-overlap. A network in which everything is one hop away scores $\eta=1$---the
-worst possible value---while paying the least. Our measurements exhibit exactly
-this inversion: Boardfly attains higher $\eta$ than Shiftfly while paying
-higher absolute $T$. The quantity to minimise is $T$; $\eta$ is diagnostic
-only.
-\end{remark}
-
-The design problem is the bi-objective
-\begin{equation}
-\label{eq:biobj}
-  \min_{G:\ \Delta(G)\le\Delta_{\max}}
-  \Bigl(\ \bar{\dist}(G),\ \ \mathbb{E}_{S,h}\bigl[T(S,h)\bigr]\ \Bigr),
-\end{equation}
-and the two conflict. Expander graphs minimise $\bar{\dist}$ but random routes
-share few edges; trees maximise sharing and have poor diameter and bisection.
+The argument is this. Boardfly's global tier is the complete graph $K_{36}$ on
+groups, so reaching $G$ groups costs $G-1$ optical ports per group. At
+$400{,}000$ chips, i.e.\ $G=12{,}500$ groups of $32$, this is $12{,}499$ ports
+against $40$ available. Full connectivity does not scale, another hierarchy
+level must be introduced, and by~\eqref{eq:chiphops} every added level costs
+four chip hops. The property that gives Boardfly its diameter is the property
+that bounds its size.
 
 %======================================================================
-\section{The construction}
-\label{sec:construction}
+\section{Design}
+\label{sec:design}
 
-\begin{definition}[Kautz digraph]
-For $d\ge2$ and $D\ge1$, $K(d,D)$ has as vertices the words
-$u_1u_2\cdots u_D$ over an alphabet of size $d+1$ with $u_i\neq u_{i+1}$, and
-an arc $u \to u_2\cdots u_D\alpha$ for every $\alpha \neq u_D$.
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.88\textwidth]{../figures/hierarchy.png}
+\caption{Shiftfly changes exactly one tier. The building block and the group are
+Boardfly's, unchanged; only the global tier is replaced, and it rides the
+optical circuit switch that already exists.}
+\label{fig:hierarchy}
+\end{figure*}
+
+\begin{definition}[Kautz digraph~\cite{kautz1968}]
+For $d\ge2$, $D\ge1$, the vertices of $K(d,D)$ are words $u_1\cdots u_D$ over an
+alphabet of size $d+1$ with $u_i\ne u_{i+1}$, and there is an arc
+$u \to u_2\cdots u_D\alpha$ for each $\alpha\ne u_D$.
 \end{definition}
 
 \begin{definition}[Shiftfly]
 Retain Boardfly's building block ($4$ chips, complete) and group ($8$ building
 blocks, complete; $32$ chips). Replace the complete global tier by a Kautz
 digraph on the groups, realised as a fixed permutation installed on the optical
-circuit switch. When the group count is not of the form $(d+1)d^{D-1}$, use the
-Imase--Itoh digraph on $\Z_n$ with arcs $i \mapsto -di-r \bmod n$,
-$r=1,\dots,d$, which exists for every $n$.
+circuit switch. Where the group count is not of the form $(d+1)d^{D-1}$, use the
+Imase--Itoh digraph~\cite{imase1981,imase1983} on $\Z_n$ with arcs
+$i\mapsto -di-r \bmod n$, $r=1,\dots,d$, which exists at every order.
 \end{definition}
 
-\begin{remark}[Port accounting]
-\label{rem:ports}
-In $K(d,D)$ a vertex $u$ is both a successor and a predecessor of $v$ exactly
-when $u_1 = u_D$, and then in exactly one neighbour: solving
-$u_2\cdots u_D\alpha = \beta u_1 \cdots u_{D-1}$ forces $\beta = u_2$,
-$u_1 = u_D$ and $\alpha = u_2$. There are $d(d+1)$ such vertices out of
-$(d+1)d^{D-1}$, a fraction $d^{2-D}$. Undirected degree is therefore $2d$, or
-$2d-1$ on that thin set, so \textbf{out-degree $d$ costs $2d$ bidirectional
-ports}. Matching Boardfly's $40$ optical ports per group means $d=20$, not
-$d=40$; comparing at $d=40$ silently doubles Shiftfly's hardware and
-invalidates the result. We report only $d=20$, and the simulator asserts the
-edge counts of the two designs agree to within $5\%$.
-\end{remark}
+Figure~\ref{fig:hierarchy} shows what changes. Nothing below the global tier is
+touched: the copper, the packaging and the $32$-chip group are Boardfly's. This
+is deliberate---those tiers are cheap, short-reach and well designed, and the
+obstruction of \S\ref{sec:moore} lives entirely above them.
 
-%======================================================================
-\section{Properties}
-\label{sec:theory}
+\subsection{Port accounting}
+\label{sec:ports}
 
-\begin{theorem}[Order, degree, diameter]
-\label{thm:kautz}
-$K(d,D)$ has $N=(d+1)d^{D-1}$ vertices, out-degree and in-degree $d$, and
-diameter exactly $D$.
-\end{theorem}
+The comparison is worthless unless both designs are held to the same optical
+budget, and the natural reading of ``out-degree $d$'' understates Shiftfly's
+cost by a factor of two.
 
-\begin{proof}
-There are $d+1$ choices for $u_1$ and $d$ for each subsequent symbol, giving
-the order. Out-degree is the number of $\alpha \neq u_D$, namely $d$. For the
-diameter, given $u$ and $v$ the word $u_{k+1}\cdots u_D v_1 \cdots v_k$ is a
-legal vertex whenever the junction symbols differ, and applying the arc map $D$
-times transforms $u$ into $v$; hence $\dist(u,v)\le D$. It is exactly $D$ for
-$u,v$ sharing no admissible overlap.
-\end{proof}
-
-Against the directed Moore bound $N \le (d^{D+1}-1)/(d-1)$, $K(d,D)$ is within
-a factor $1+O(1/d)$: it is essentially optimal among digraphs.
-
-\begin{theorem}[Shift routing]
-\label{thm:shift}
-For $u,v \in K(d,D)$ the sequence
-$w^{(k)} = u_{k+1}\cdots u_D v_1\cdots v_k$, $k=0,\dots,D$, is a walk from $u$
-to $v$ of length at most $D$, computable from the labels alone.
-\end{theorem}
-
-\begin{proof}
-$w^{(0)}=u$ and $w^{(D)}=v$, and $w^{(k+1)}$ is obtained from $w^{(k)}$ by
-deleting the leading symbol and appending $v_{k+1}$, which is the arc map.
-\end{proof}
-
-Theorem~\ref{thm:shift} is the operational point: routing requires no tables,
-no routing protocol and no convergence, at any scale. The destination label is
-the route.
-
-\begin{theorem}[Merge criterion]
-\label{thm:merge}
-Let $u,u'$ route to a common $v$ under Theorem~\ref{thm:shift}. Their walks
-occupy the same vertex at step $k$ if and only if $u$ and $u'$ agree in their
-last $D-k$ symbols. Consequently the first merge occurs at
-\[
-  k^{*}(u,u') \;=\; D - \operatorname{lcs}(u,u'),
-\]
-where $\operatorname{lcs}$ is the length of the longest common suffix.
-\end{theorem}
-
-\begin{proof}
-By Theorem~\ref{thm:shift}, $w^{(k)}$ depends on $u$ only through
-$u_{k+1}\cdots u_D$ and on $v$ through a prefix common to both walks. Equality
-of $w^{(k)}$ and $w'^{(k)}$ is therefore equivalent to equality of those
-suffixes.
-\end{proof}
-
-Theorem~\ref{thm:merge} says redundant requests collapse \emph{structurally}:
-once two requests for the same item meet, the second can be served from an
-in-network cache at the meeting point, with no coordination, no directory and
-no protocol. It is a statement about the routing algebra.
-
-\begin{proposition}[Random labels give almost no merging]
-\label{prop:random}
-If labels are assigned uniformly at random, then
-$\Pr[\operatorname{lcs}(u,u')\ge j] = d^{-j}(1+o(1))$, so
-$\mathbb{E}[\operatorname{lcs}] = \frac{1}{d-1}(1+o(1))$ and
-$\mathbb{E}[k^{*}] = D - \frac{1}{d-1}(1+o(1))$.
+\begin{proposition}
+\label{prop:ports}
+In $K(d,D)$ with $D\ge2$, a vertex is both a successor and a predecessor of
+another exactly when $u_1=u_D$, and then in exactly one neighbour. There are
+$d(d+1)$ such vertices out of $(d+1)d^{D-1}$. Undirected degree is therefore
+$2d$, or $2d-1$ on that thin set.
 \end{proposition}
 
 \begin{proof}
-Symbols are independent given the no-repeat constraint, and each successive
-suffix symbol agrees with probability $1/d$ up to the constraint correction.
+$v$ is a successor and predecessor of $u$ iff $u_2\cdots u_D\alpha =
+\beta u_1\cdots u_{D-1}$ for admissible $\alpha,\beta$. Matching coordinates
+forces $\beta=u_2$, $u_i = u_{i+2}$ for all valid $i$, and $\alpha=u_2$; with
+the no-repeat constraint this reduces to $u_1=u_D$ and determines $\alpha$
+uniquely. Counting words with $u_1=u_D$ gives $d(d+1)$.
 \end{proof}
 
-At $d=20$ this is $\mathbb{E}[\operatorname{lcs}]\approx 0.053$: essentially no
-merging before the destination. \textbf{The merge property is not free.} It is
-purchased by choosing the labelling so that groups likely to want the same
-content are suffix-close---and that is the co-design step, an embedding of the
-observed sharing hypergraph into the suffix tree.
+\begin{corollary}
+Out-degree $d$ costs $2d$ bidirectional ports. Matching Boardfly's $40$ optical
+ports per group means $d=20$, not $d=40$.
+\end{corollary}
 
-\begin{theorem}[Arbitrary order]
-The Imase--Itoh digraph on $\Z_n$ with arcs $i\mapsto -di-r \bmod n$,
-$r=1,\dots,d$, has out-degree $d$ and diameter at most $\lceil \log_d n\rceil$
-for every $n\ge2$.
+Every result below uses $d=20$, and our artefact asserts that the two designs'
+edge counts agree to within $5\%$ at each scale.
+
+\subsection{Routing}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.88\textwidth]{../figures/routing.png}
+\caption{Shift routing on $K(2,2)$, with the two-hop route $01\to12\to20$. The
+destination label is the route: no table is consulted and no protocol
+converges.}
+\label{fig:routing}
+\end{figure*}
+
+Routing is a shift register (Figure~\ref{fig:routing}); the rule and its
+optimality are Theorem~\ref{thm:shift}.
+
+%======================================================================
+\section{Analysis}
+\label{sec:analysis}
+
+\begin{theorem}[Order, degree, diameter~\cite{kautz1968}]
+\label{thm:kautz}
+$K(d,D)$ has $N=(d+1)d^{D-1}$ vertices, in- and out-degree $d$, and diameter
+exactly $D$.
+\end{theorem}
+
+\begin{proof}
+There are $d+1$ choices for $u_1$ and $d$ for each later symbol, giving the
+order; out-degree is the number of $\alpha\ne u_D$. For the diameter, applying
+the arc map $D$ times replaces every symbol of $u$ by one of $v$, so
+$\dist(u,v)\le D$, and $D$ is attained by any pair sharing no admissible
+overlap.
+\end{proof}
+
+Against the directed Moore bound $N\le(d^{D+1}-1)/(d-1)$, $K(d,D)$ is within a
+factor $1+O(1/d)$: it is essentially optimal among digraphs, which is the reason
+to prefer it to de~Bruijn here.
+
+\begin{theorem}[Shift routing]
+\label{thm:shift}
+Let $\ell$ be the length of the longest suffix of $u$ that is a prefix of $v$,
+and $k=D-\ell$. Then
+$w^{(j)} = u_{j+1}\cdots u_D\, v_{\ell+1}\cdots v_{\ell+j}$, $j=0,\dots,k$, is a
+walk from $u$ to $v$ of length $k$, and $k=\dist(u,v)$.
+\end{theorem}
+
+\begin{proof}
+$w^{(0)}=u$, and $w^{(j+1)}$ is obtained from $w^{(j)}$ by deleting the leading
+symbol and appending $v_{\ell+j+1}$, which is the arc map. At $j=k$ we have
+$w^{(k)} = u_{k+1}\cdots u_D\,v_{\ell+1}\cdots v_D$, and $u_{k+1}\cdots u_D$ has
+length $\ell$ and equals $v_1\cdots v_\ell$ by definition of $\ell$; hence
+$w^{(k)}=v$. Each $w^{(j)}$ is a legal vertex because $u_D=v_\ell \ne
+v_{\ell+1}$. Minimality follows because reaching $v$ in $k'$ steps requires the
+length-$(D-k')$ suffix of $u$ to equal the corresponding prefix of $v$, and
+$\ell$ is the largest such overlap.
+\end{proof}
+
+Theorem~\ref{thm:shift} is the operational point: the destination label is the
+route. There is no forwarding table to size, no routing protocol to converge and
+no state to reconcile after a reconfiguration, at any scale.
+
+\begin{theorem}[Merge criterion]
+\label{thm:merge}
+Let $u,u'$ route to a common $v$ under Theorem~\ref{thm:shift} with equal
+overlap. Their walks occupy the same vertex at step $j$ if and only if $u$ and
+$u'$ agree in their last $D-j$ symbols. The first merge is therefore at
+$j^\ast = D-\lcs(u,u')$, where $\lcs$ is the longest common suffix.
+\end{theorem}
+
+\begin{proof}
+By Theorem~\ref{thm:shift}, $w^{(j)}$ depends on the source only through
+$u_{j+1}\cdots u_D$; the appended symbols are a function of $v$ alone. Equality
+of $w^{(j)}$ and $w'^{(j)}$ is thus equivalent to equality of those suffixes.
+\end{proof}
+
+Theorem~\ref{thm:merge} says that redundant requests collapse
+\emph{structurally}: once two requests for the same item meet, the second may be
+served from an in-network cache at the meeting point, with no directory, no
+coordination and no protocol. It is a statement about the routing algebra, and
+it is the property that motivated this design.
+
+\begin{proposition}[Random labels give almost no merging]
+\label{prop:random}
+Under a uniformly random labelling,
+$\Pr[\lcs(u,u')\ge j]=d^{-j}(1+o(1))$, whence
+$\E[\lcs]=\tfrac{1}{d-1}(1+o(1))$ and $\E[j^\ast]=D-\tfrac{1}{d-1}(1+o(1))$.
+\end{proposition}
+
+At $d=20$ this is $\E[\lcs]\approx0.053$: essentially no merging before the
+destination. \textbf{The merge property is not free.} It must be purchased by
+choosing the labelling so that groups likely to request the same content are
+suffix-close---an embedding of the observed sharing hypergraph into the suffix
+tree. \S\ref{sec:sharing} measures what that is worth, and the answer is
+sobering.
+
+\begin{theorem}[Arbitrary order~\cite{imase1981,reddy1980}]
+The Imase--Itoh digraph on $\Z_n$ has out-degree $d$ and diameter at most
+$\lceil\log_d n\rceil$ for every $n\ge2$.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-Iterating the arc map $k$ times sends $i$ to $(-d)^k i - \sum_{j} r_j (-d)^{k-j}
-\bmod n$. As the $r_j$ range over $\{1,\dots,d\}$ the reachable set after $k$
-steps has size $\min(d^k, n)$, and covers $\Z_n$ once $d^k \ge n$.
+Iterating the arc map $k$ times sends $i$ to $(-d)^k i-\sum_j r_j(-d)^{k-j}$.
+As the $r_j$ range over $\{1,\dots,d\}$ the reachable set after $k$ steps has
+size $\min(d^k,n)$, and covers $\Z_n$ once $d^k\ge n$.
 \end{proof}
 
-This removes the quantisation that would otherwise strand capacity: a Kautz
-graph exists only at orders $(d+1)d^{D-1}$, and a real machine is whatever size
-it is.
+This removes a quantisation that would otherwise strand capacity: string Kautz
+graphs exist only at orders $(d+1)d^{D-1}$, and a machine is whatever size it
+is.
 
-\begin{proposition}[Connectivity]
+\begin{proposition}[Connectivity~\cite{imase1983}]
 $K(d,D)$ has vertex connectivity $d$, the maximum possible at that degree.
 \end{proposition}
 
@@ -410,51 +461,43 @@ connectivity is the relevant defence.
 \section{Evaluation}
 \label{sec:eval}
 
-All measurements come from the accompanying simulator, which is
-dependency-free and reproduces every table and figure from one script.
-Distances are exact by breadth-first search where the instance permits and
-sampled otherwise, and sampled figures are labelled as such. Spectral gaps are
-power-iteration estimates. Both designs receive $40$ optical ports per group
-and identical $32$-chip group internals, so the comparison is at matched
-optical cost (Remark~\ref{rem:ports}).
+\subsection{Methodology}
+
+Both designs receive $40$ optical ports per group and identical $32$-chip group
+internals, so all comparisons are at matched optical cost
+(Proposition~\ref{prop:ports}). Distances are computed exactly by breadth-first
+search where the instance permits and by sampling from $120$--$256$ random
+sources otherwise; sampled diameters are lower bounds and are labelled as
+sampled. Spectral gaps are power-iteration estimates of $1-\lambda_2$ of the
+normalised adjacency operator, reported as estimates. The simulator is
+stdlib-only and regenerates every figure and table in this paper from one
+script~\cite{krause2026shiftfly}.
+
+Boardfly beyond one pod is modelled generously: the $5$ optical ports per group
+left after intra-pod full connectivity are wired as a random graph over pods,
+which at $347$ pods yields a low-diameter pod-level graph. We are not
+handicapping the incumbent.
 
 \subsection{Model validation}
-The chip-level Boardfly pod model has $1{,}152$ vertices, maximum degree $7$,
-and \textbf{measured diameter exactly $7$}, matching the published figure and
-Lemma~\ref{lem:seven}.
+\label{sec:validation}
+
+Our chip-level Boardfly pod has $1{,}152$ vertices, maximum degree $7$, mean
+degree $5.84$, and \textbf{measured diameter exactly $7$}, matching the
+published figure and Lemma~\ref{lem:seven}. Every conclusion below rests on this
+check.
 
 \subsection{Scaling}
-Figure~\ref{fig:diam} reports chip-level diameter against system size.
-\textbf{Boardfly wins at one-pod scale} ($7$ against Shiftfly's $11$ at
-$1{,}152$ chips) and loses beyond it, because the complete global tier must be
-re-hierarchised while the Kautz tier merely grows one symbol. Mean distance and
-spectral expansion follow the same pattern; at the scales tested Shiftfly's
-spectral gap is roughly $2.7\times$ Boardfly's, which is unsurprising in
-hindsight: a hierarchy of near-cliques joined by few links is a poor expander
-by construction, whatever its diameter.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.92\textwidth]{../figures/diameter_vs_scale.png}
+\includegraphics[width=\columnwidth]{../figures/paper_diameter.png}
 \caption{Chip-level worst-case distance at equal optical cost. Boardfly is
 better at pod scale; the crossing is the result.}
 \label{fig:diam}
 \end{figure}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.92\textwidth]{../figures/spectral_gap.png}
-\caption{Spectral gap of the group graph. A hierarchy of near-cliques joined
-by few links expands poorly whatever its diameter; the flat shift graph does
-not.}
-\label{fig:gap}
-\end{figure}
-
-\subsection{Scaling: the numbers}
-At matched optical cost, chip-level worst-case distance is:
-
-\begin{center}
-\small
+\begin{table}[t]
+\centering\small
 \begin{tabular}{rrr}
 \toprule
 Chips & Boardfly & Shiftfly \\
@@ -468,125 +511,184 @@ Chips & Boardfly & Shiftfly \\
 1{,}152{,}000 & 23 & \textbf{19} \\
 \bottomrule
 \end{tabular}
-\end{center}
+\caption{Chip-level diameter at $40$ optical ports per group.}
+\label{tab:scale}
+\end{table}
 
-At the $400{,}000$-chip target the reduction is $23 \to 19$, or $17\%$; the
-largest gap in the sweep is $23 \to 15$ at $268{,}800$ chips, where Boardfly has
+Table~\ref{tab:scale} and Figure~\ref{fig:diam} give the result.
+\textbf{Boardfly is strictly better at the scale it was designed for}: $7$
+against $11$ chip hops at $1{,}152$ chips, because a complete global tier
+crosses in one hop and a shift tier needs three. The curves cross near $4{,}600$
+chips. At the $400{,}000$-chip target the reduction is $23\to19$, or $17\%$; the
+widest gap in the sweep is $23\to15$ at $268{,}800$ chips, where Boardfly has
 just paid for another hierarchy level and Shiftfly has not yet needed another
 symbol. Both curves are step functions, so the advantage is not monotone.
 
-\subsection{Sharing}
-This is where the proposal is weakest, and we state it plainly. Writing $T$ for
-tree hops per requester:
+\subsection{Expansion}
 
-\begin{center}
-\small
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{../figures/paper_gap.png}
+\caption{Spectral gap of the group graph. A hierarchy of near-cliques joined by
+few links expands poorly whatever its diameter.}
+\label{fig:gap}
+\end{figure}
+
+Shiftfly's spectral gap is roughly $2.7\times$ Boardfly's across the tested
+range (Figure~\ref{fig:gap}). In hindsight this is unsurprising and it is worth
+stating why, because it cuts against the usual intuition about de~Bruijn-family
+graphs. Those families are known to have poor bisection relative to
+\emph{expanders}~\cite{bermond1989debruijn}. Boardfly beyond one pod is not an
+expander: it is a set of near-cliques joined by a thin random tier, which is
+close to the worst case for spectral expansion. The comparison therefore favours
+Shiftfly here, and would not against a flat high-radix fabric.
+
+\subsection{Sharing: a negative result}
+\label{sec:sharing}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{../figures/paper_sharing.png}
+\caption{Cost of serving one shared item to $32$ agents, in tree hops per
+requester. Placement does most of the work, on both topologies.}
+\label{fig:sharing}
+\end{figure}
+
+Agentic inference fans one query into many concurrent rollouts that share a
+prompt prefix, tool definitions and retrieved context, and therefore request the
+same content~\cite{zheng2024sglang,qin2025mooncake,wang2023selfconsistency}.
+Theorem~\ref{thm:merge} says a shift-routed fabric collapses such requests
+structurally. We set out to quantify that advantage. It is small.
+
+\begin{definition}
+For home vertex $h$ and requester set $S$, the \emph{unicast cost} is
+$U=\sum_{v\in S}\dist(v,h)$ and the \emph{tree cost} $T$ is the number of edges
+in the union of shortest paths from $S$ to $h$---what a fabric with in-network
+replication pays. The \emph{efficiency} is $\eta=U/T$.
+\end{definition}
+
+\begin{table}[t]
+\centering\small
 \begin{tabular}{lrrrr}
 \toprule
-& \multicolumn{2}{c}{$T$ (lower is better)} & \multicolumn{2}{c}{merge depth}\\
+& \multicolumn{2}{c}{$T$ per requester} & \multicolumn{2}{c}{merge depth}\\
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}
 Placement & Boardfly & Shiftfly & Boardfly & Shiftfly\\
 \midrule
-random           & 2.768 & 2.470 & 2.868 & 2.772 \\
-locality-aware   & 2.174 & \textbf{2.112} & 2.336 & \textbf{2.152} \\
+random & 2.768 & 2.470 & 2.868 & 2.772 \\
+locality-aware & 2.174 & \textbf{2.112} & 2.336 & \textbf{2.152} \\
 \midrule
-saving from placement & $-21.5\%$ & $-14.5\%$ & & \\
+saving & $-21.5\%$ & $-14.5\%$ & & \\
 \bottomrule
 \end{tabular}
-\end{center}
+\caption{Shared-content cost. Lower is better. Placement dominates.}
+\label{tab:sharing}
+\end{table}
 
-Locality-aware placement removes $21.5\%$ of tree cost on Boardfly and $14.5\%$
-on Shiftfly. \textbf{Shiftfly's residual advantage at matched placement is
-$2.9\%$}, with merge depth $7.9\%$ lower. The overwhelming majority of the
-available saving on shared content therefore comes from \emph{placement}, which
-is topology-agnostic, and not from the shift algebra.
+Table~\ref{tab:sharing} and Figure~\ref{fig:sharing} report a workload of $32$
+agents per query over $64$ affinity clusters with $85\%$ scheduler locality and
+Zipf-distributed item popularity, on $8{,}400$ groups. Locality-aware placement
+removes $21.5\%$ of tree cost on Boardfly and $14.5\%$ on Shiftfly.
+\textbf{Shiftfly's residual advantage at matched placement is $2.9\%$}, with
+merge depth $7.9\%$ lower. The great majority of the achievable saving on shared
+content therefore comes from \emph{placement}, which is topology-agnostic and
+equally available to Boardfly.
 
-Furthermore the efficiency ratio $\eta$ ranks Boardfly \emph{higher}
+\begin{remark}[A metric inversion]
+\label{rem:trap}
+$\eta$ must not be optimised alone. It is a ratio, so a topology is rewarded for
+placing requesters \emph{far} from the home vertex provided their paths overlap;
+a network in which everything is one hop away scores the worst possible $\eta=1$
+while paying the least. In our measurements $\eta$ ranks Boardfly \emph{higher}
 ($1.431$ against $1.364$) while absolute tree cost ranks it \emph{lower}
-($2.174$ against $2.112$)---precisely the inversion predicted in
-Remark~\ref{rem:trap}. Had we reported $\eta$ alone, as the natural reading of
-the objective in \eqref{eq:biobj} invites, we would have drawn the opposite
-conclusion.
-
-\paragraph{Conclusion of the evaluation.} The defensible case for Shiftfly is
-scaling and expansion. The redundancy case, as measured here, is
-\emph{primarily an argument for locality-aware placement}, which is
-topology-agnostic.
+($2.174$ against $2.112$). Had we reported $\eta$ alone---the natural reading of
+a sharing objective---we would have drawn the opposite conclusion.
+\end{remark}
 
 %======================================================================
-\section{Limitations, and how this could be wrong}
+\section{Discussion and limitations}
 \label{sec:limits}
 
-\begin{enumerate}
-\item \textbf{Boardfly is better at the scale it was designed for.} At
-$1{,}152$ chips the complete global tier is simply the right answer. Nothing
-here contradicts that choice.
+\paragraph{Boardfly is right at pod scale.} At $1{,}152$ chips a complete global
+tier is simply the correct answer, and our own measurements say so. Nothing here
+argues that TPU~8i should have been built differently.
 
-\item \textbf{Bisection.} De~Bruijn and Kautz families have bisection width
-$\Theta(N/\log N)$, against $\Theta(N)$ for a complete or expander tier.
-Measured against a \emph{hierarchy} the comparison favours Shiftfly, because
-hierarchies expand badly; measured against a flat high-radix fabric it would
-not. All-to-all-dominated workloads are the adversarial case.
+\paragraph{Bisection.} De~Bruijn and Kautz families have asymptotically smaller
+bisection than a complete or expander tier~\cite{bermond1989debruijn}. We win
+against a \emph{hierarchy} because hierarchies expand badly; against a flat
+high-radix fabric we would not. All-to-all-dominated training is the adversarial
+workload, and it is exactly the workload TPU~8t retains a torus and a flat
+scale-out fabric for.
 
-\item \textbf{Cabling.} Shift edges are long and irregular, which is the
-standard reason de~Bruijn networks are not built. The mitigation is specific
-and not general: the global tier is already optically circuit-switched, so the
-wiring is a permutation the switch installs, not copper anyone routes. This
-argument is available to an operator that owns an OCS layer and to essentially
-nobody else.
+\paragraph{Cabling.} Shift edges are long and irregular, which is the standard
+reason de~Bruijn networks are not built~\cite{bermond1989debruijn}. Our
+mitigation is narrow and we do not generalise it: the global tier is
+\emph{already} optically circuit-switched, so the wiring is a permutation the
+switch installs rather than cable anyone routes. This argument is available to
+an operator that owns an OCS layer~\cite{poutievski2022jupiter} and to
+essentially nobody else.
 
-\item \textbf{Deterministic routing.} Shift routing yields one path. Load
-balance will require non-minimal alternatives, and randomising the route partly
-destroys the merge property of Theorem~\ref{thm:merge}. The interaction is
-unquantified here.
+\paragraph{Deterministic routing.} Theorem~\ref{thm:shift} yields a single path.
+Load balance will require non-minimal
+alternatives~\cite{valiant1982,jiang2009ugal}, and randomising the route partly
+destroys the merge property of Theorem~\ref{thm:merge}. We have not quantified
+that interaction, and it is the most important piece of missing work.
 
-\item \textbf{The switch is mechanical.} MEMS-based optical circuit switches
-reconfigure in milliseconds to seconds, so the Kautz permutation is fixed at
-scheduling time. Label assignment is therefore a scheduling decision, not a
-runtime one.
+\paragraph{The switch is mechanical.} MEMS-based optical circuit switches
+reconfigure on millisecond-to-second
+timescales~\cite{poutievski2022jupiter,jouppi2023tpuv4}, so the Kautz
+permutation is fixed at scheduling time. Label assignment is a scheduling
+decision, not a runtime one.
 
-\item \textbf{The workload model is synthetic.} Cluster count, agent fan-out,
-scheduler locality and Zipf exponent are chosen to be plausible, not measured.
-The sharing conclusions are only as good as those four numbers.
-\end{enumerate}
+\paragraph{The workload model is synthetic.} Cluster count, agent fan-out,
+scheduler locality and Zipf exponent are plausible rather than measured; the
+conclusions of \S\ref{sec:sharing} are only as good as those four numbers.
 
 %======================================================================
 \section{Related work}
 
-Dragonfly established the high-radix hierarchical form that Boardfly follows.
-The degree--diameter literature supplies the ceiling used in
-Section~\ref{sec:moore}, and recent topologies---Slim~Fly from
-McKay--Miller--\v{S}ir\'a\v{n} graphs, PolarFly from Erd\H{o}s--R\'enyi
-polarity graphs, Bundlefly---pursue it directly at router radix. Shiftfly
-differs in operating at accelerator radix, where the endpoint \emph{is} the
-router, and in taking the content-addressing property of the shift families
-seriously; the same algebra underlies the Koorde distributed hash table.
-Kautz digraphs are due to Kautz; the arbitrary-order generalizations to Reddy,
-Pradhan and Kuhl, and to Imase and Itoh.
+Dragonfly~\cite{kim2008dragonfly} established the high-radix hierarchical form
+that Boardfly follows, and HyperX~\cite{ahn2009hyperx} the flattened
+alternative. The degree--diameter literature supplies our
+ceiling~\cite{hoffman1960,miller2013degdiam}, and a line of recent topologies
+pursues it directly: Slim~Fly from McKay--Miller--\v{S}ir\'a\v{n}
+graphs~\cite{besta2014slimfly}, PolarFly from Erd\H{o}s--R\'enyi polarity
+graphs~\cite{lakhotia2022polarfly}, and Bundlefly~\cite{lei2020bundlefly}. These
+operate at \emph{router} radix, where a switch has tens of ports; Shiftfly
+operates at accelerator radix, where the endpoint is the router and the port
+count is single-digit per chip.
+
+Kautz digraphs are due to Kautz~\cite{kautz1968}; arbitrary-order
+generalizations to Reddy, Pradhan and Kuhl~\cite{reddy1980} and Imase and
+Itoh~\cite{imase1981,imase1983}. The same shift algebra underlies the Koorde
+distributed hash table~\cite{kaashoek2003koorde}, which is where we take the
+content-addressing observation from; our contribution is to place it in the
+physical topology rather than in an overlay. Google's optical circuit switching
+infrastructure is described in Jupiter Evolving~\cite{poutievski2022jupiter} and
+its use for TPU reconfiguration in TPU~v4~\cite{jouppi2023tpuv4}. Redundancy in
+LLM serving is exploited above the network by prefix
+caching~\cite{zheng2024sglang} and disaggregated KV
+stores~\cite{qin2025mooncake}; we ask whether it can be exploited in the fabric,
+and largely conclude that it is better handled by placement.
 
 %======================================================================
 \section{Conclusion}
 
 Google's move from torus to Boardfly traded a $\Theta(N^{1/3})$ diameter for a
-constant one and was clearly correct for a $1{,}152$-chip inference pod. The
+constant one, and was clearly correct for a $1{,}152$-chip inference pod. The
 mechanism it used---full connectivity at every tier---does not extend, because
 complete graphs need $N-1$ ports. Replacing only the global tier with a
-generalized Kautz digraph keeps the diameter logarithmic in the number of
-groups at a fixed port budget, yields table-free routing and native content
-addressing, and measurably improves expansion.
+generalized Kautz digraph keeps the diameter logarithmic in the group count at a
+fixed port budget, yields table-free routing and native content addressing, and
+measurably improves expansion, at the cost of being worse inside a single pod.
 
 The redundancy argument that motivated the design did not survive its own
-evaluation intact: most of the available saving on shared content comes from
-placement, not from topology. We regard reporting that as more useful than
-the alternative.
+evaluation: most of the available saving on shared content comes from placement,
+not from topology, and the natural metric for that objective inverts the
+ranking. We regard reporting this as more useful than the alternative.
 
-\appendix
-\section{Reproduction}
-\begin{verbatim}
-git clone https://github.com/EylonKrause/shiftfly
-cd shiftfly
-python3 run_experiments.py           # stdlib only
-python3 -m unittest discover -s tests
-\end{verbatim}
+\balance
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{shiftfly}
 
 \end{document}

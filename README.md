@@ -9,8 +9,17 @@ Dragonfly type with diameter 7 over 1,152 chips.
 
 This repository audits every shipped TPU topology against the Moore bound,
 proposes a replacement for Boardfly's *global tier* that scales past one pod,
-and measures both honestly. **📄 [Read the paper](paper/shiftfly.pdf)**
-([source](paper/shiftfly.tex)).
+and measures both honestly.
+
+> ### 📄 [**Read the paper**](paper/shiftfly.pdf)
+> *Shiftfly: Scaling the Accelerator Interconnect Past the Pod with a
+> Shift-Routed Optical Tier* — ACM `sigconf` two-column format, 7 pages,
+> 24 references, with proofs.
+> [LaTeX source](paper/shiftfly.tex) · [bibliography](paper/shiftfly.bib)
+>
+> ```
+> cd paper && pdflatex shiftfly && bibtex shiftfly && pdflatex shiftfly && pdflatex shiftfly
+> ```
 
 ```
 git clone https://github.com/EylonKrause/shiftfly

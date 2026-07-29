@@ -304,6 +304,20 @@ def figures(scale: dict, sharing: dict) -> None:
         [("Boardfly-of-pods", scale["bfg"]), ("Shiftfly", scale["sfg"])],
         "chips in the system (log scale)", "1 - lambda_2", fmt="{:.2f}"))
 
+    # bare variants for the paper, whose LaTeX captions carry the titles
+    write_pair(str(FIG / "paper_diameter"), lambda t: line_chart(
+        t, "", "", chips,
+        [("Boardfly-of-pods", [chip_hops(d) for d in scale["bf"]]),
+         ("Shiftfly", [chip_hops(d) for d in scale["sf"]])],
+        "chips in the system (log scale)", "worst-case chip hops",
+        fmt="{:.0f}", height=390))
+
+    write_pair(str(FIG / "paper_gap"), lambda t: line_chart(
+        t, "", "", chips,
+        [("Boardfly-of-pods", scale["bfg"]), ("Shiftfly", scale["sfg"])],
+        "chips in the system (log scale)", "spectral gap  1 - lambda_2",
+        fmt="{:.2f}", height=390))
+
     cats = ["random placement", "locality placement"]
     write_pair(str(FIG / "sharing_cost"), lambda t: grouped_bars(
         t, "Cost of serving one shared item to 32 agents",
@@ -315,6 +329,14 @@ def figures(scale: dict, sharing: dict) -> None:
          ("Shiftfly", [sharing[("Shiftfly", "random")]["tree"],
                        sharing[("Shiftfly", "locality")]["tree"]])],
         "tree hops per requester", fmt="{:.3f}"))
+
+    write_pair(str(FIG / "paper_sharing"), lambda t: grouped_bars(
+        t, "", "", cats,
+        [("Boardfly-of-pods", [sharing[("Boardfly", "random")]["tree"],
+                               sharing[("Boardfly", "locality")]["tree"]]),
+         ("Shiftfly", [sharing[("Shiftfly", "random")]["tree"],
+                       sharing[("Shiftfly", "locality")]["tree"]])],
+        "tree hops per requester", fmt="{:.3f}", height=390))
 
 
 def main() -> None:

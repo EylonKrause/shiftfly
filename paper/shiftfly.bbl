@@ -1,0 +1,328 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{24}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{} and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showURL}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showURL #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[Ahn et~al\mbox{.}(2009)]%
+        {ahn2009hyperx}
+\bibfield{author}{\bibinfo{person}{Jung~Ho Ahn}, \bibinfo{person}{Nathan
+  Binkert}, \bibinfo{person}{Al Davis}, \bibinfo{person}{Moray McLaren}, {and}
+  \bibinfo{person}{Robert~S. Schreiber}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{{HyperX}: Topology, Routing, and Packaging of
+  Efficient Large-Scale Networks}. In \bibinfo{booktitle}{\emph{Proceedings of
+  the Conference on High Performance Computing Networking, Storage and Analysis
+  (SC)}}.
+\newblock
+
+
+\bibitem[Bermond and Peyrat(1989)]%
+        {bermond1989debruijn}
+\bibfield{author}{\bibinfo{person}{Jean-Claude Bermond} {and}
+  \bibinfo{person}{Claudine Peyrat}.} \bibinfo{year}{1989}\natexlab{}.
+\newblock \showarticletitle{de {B}ruijn and {K}autz Networks: A Competitor for
+  the Hypercube?}
+\newblock In \bibinfo{booktitle}{\emph{Hypercube and Distributed Computers}}.
+  \bibinfo{publisher}{North-Holland}.
+\newblock
+
+
+\bibitem[Besta and Hoefler(2014)]%
+        {besta2014slimfly}
+\bibfield{author}{\bibinfo{person}{Maciej Besta} {and} \bibinfo{person}{Torsten
+  Hoefler}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Slim Fly: A Cost Effective Low-Diameter Network
+  Topology}. In \bibinfo{booktitle}{\emph{Proceedings of the International
+  Conference for High Performance Computing, Networking, Storage and Analysis
+  (SC)}}.
+\newblock
+
+
+\bibitem[{Google}(2026)]%
+        {google2026eighthgen}
+\bibfield{author}{\bibinfo{person}{{Google}}.} \bibinfo{year}{2026}\natexlab{}.
+\newblock \bibinfo{title}{Our Eighth Generation {TPU}s: Two Chips for the
+  Agentic Era}.
+\newblock \bibinfo{howpublished}{The Keyword}.
+\newblock
+\shownote{\url{https://blog.google/innovation-and-ai/infrastructure-and-cloud/google-cloud/eighth-generation-tpu-agentic-era/}}.
+\newblock
+
+
+\bibitem[{Google Cloud}(2026)]%
+        {google2026tpu8}
+\bibfield{author}{\bibinfo{person}{{Google Cloud}}.}
+  \bibinfo{year}{2026}\natexlab{}.
+\newblock \bibinfo{title}{{TPU} 8t and {TPU} 8i Technical Deep Dive}.
+\newblock \bibinfo{howpublished}{Google Cloud Blog}.
+\newblock
+\shownote{\url{https://cloud.google.com/blog/products/compute/tpu-8t-and-tpu-8i-technical-deep-dive}}.
+\newblock
+
+
+\bibitem[Hoffman and Singleton(1960)]%
+        {hoffman1960}
+\bibfield{author}{\bibinfo{person}{Alan~J. Hoffman} {and}
+  \bibinfo{person}{Robert~R. Singleton}.} \bibinfo{year}{1960}\natexlab{}.
+\newblock \showarticletitle{On Moore Graphs with Diameters 2 and 3}.
+\newblock \bibinfo{journal}{\emph{IBM Journal of Research and Development}}
+  \bibinfo{volume}{4}, \bibinfo{number}{5} (\bibinfo{year}{1960}).
+\newblock
+
+
+\bibitem[Imase and Itoh(1981)]%
+        {imase1981}
+\bibfield{author}{\bibinfo{person}{Makoto Imase} {and} \bibinfo{person}{Masaki
+  Itoh}.} \bibinfo{year}{1981}\natexlab{}.
+\newblock \showarticletitle{Design to Minimize Diameter on Building-Block
+  Network}.
+\newblock \bibinfo{journal}{\emph{IEEE Trans. Comput.}} \bibinfo{volume}{C-30},
+  \bibinfo{number}{6} (\bibinfo{year}{1981}).
+\newblock
+
+
+\bibitem[Imase and Itoh(1983)]%
+        {imase1983}
+\bibfield{author}{\bibinfo{person}{Makoto Imase} {and} \bibinfo{person}{Masaki
+  Itoh}.} \bibinfo{year}{1983}\natexlab{}.
+\newblock \showarticletitle{A Design for Directed Graphs with Minimum
+  Diameter}.
+\newblock \bibinfo{journal}{\emph{IEEE Trans. Comput.}} \bibinfo{volume}{C-32},
+  \bibinfo{number}{8} (\bibinfo{year}{1983}).
+\newblock
+
+
+\bibitem[Jiang et~al\mbox{.}(2009)]%
+        {jiang2009ugal}
+\bibfield{author}{\bibinfo{person}{Nan Jiang}, \bibinfo{person}{John Kim},
+  {and} \bibinfo{person}{William~J. Dally}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{Indirect Adaptive Routing on Large Scale
+  Interconnection Networks}. In \bibinfo{booktitle}{\emph{Proceedings of the
+  36th Annual International Symposium on Computer Architecture (ISCA)}}.
+\newblock
+
+
+\bibitem[Jouppi et~al\mbox{.}(2023)]%
+        {jouppi2023tpuv4}
+\bibfield{author}{\bibinfo{person}{Norman~P. Jouppi}, \bibinfo{person}{George
+  Kurian}, \bibinfo{person}{Sheng Li}, \bibinfo{person}{Peter Ma},
+  \bibinfo{person}{Rahul Nagarajan}, \bibinfo{person}{Lifeng Nai},
+  \bibinfo{person}{Nishant Patil}, \bibinfo{person}{Suvinay Subramanian},
+  \bibinfo{person}{Andy Swing}, \bibinfo{person}{Brian Towles},
+  \bibinfo{person}{Cliff Young}, \bibinfo{person}{Xiang Zhou},
+  \bibinfo{person}{Zongwei Zhou}, {and} \bibinfo{person}{David Patterson}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{{TPU} v4: An Optically Reconfigurable Supercomputer
+  for Machine Learning with Hardware Support for Embeddings}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 50th Annual International
+  Symposium on Computer Architecture (ISCA)}}.
+\newblock
+
+
+\bibitem[Kaashoek and Karger(2003)]%
+        {kaashoek2003koorde}
+\bibfield{author}{\bibinfo{person}{M.~Frans Kaashoek} {and}
+  \bibinfo{person}{David~R. Karger}.} \bibinfo{year}{2003}\natexlab{}.
+\newblock \showarticletitle{{Koorde}: A Simple Degree-Optimal Distributed Hash
+  Table}. In \bibinfo{booktitle}{\emph{Proceedings of the 2nd International
+  Workshop on Peer-to-Peer Systems (IPTPS)}}.
+\newblock
+
+
+\bibitem[Kautz(1968)]%
+        {kautz1968}
+\bibfield{author}{\bibinfo{person}{William~H. Kautz}.}
+  \bibinfo{year}{1968}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Bounds on Directed $(d,k)$ Graphs}}.
+\newblock \bibinfo{type}{{T}echnical {R}eport}. \bibinfo{institution}{Stanford
+  Research Institute}.
+\newblock
+\shownote{Theory of Cellular Logic Networks and Machines, AFCRL Final Report}.
+\newblock
+
+
+\bibitem[Kim et~al\mbox{.}(2008)]%
+        {kim2008dragonfly}
+\bibfield{author}{\bibinfo{person}{John Kim}, \bibinfo{person}{William~J.
+  Dally}, \bibinfo{person}{Steve Scott}, {and} \bibinfo{person}{Dennis Abts}.}
+  \bibinfo{year}{2008}\natexlab{}.
+\newblock \showarticletitle{Technology-Driven, Highly-Scalable Dragonfly
+  Topology}. In \bibinfo{booktitle}{\emph{Proceedings of the 35th Annual
+  International Symposium on Computer Architecture (ISCA)}}.
+\newblock
+
+
+\bibitem[Krause(2026)]%
+        {krause2026shiftfly}
+\bibfield{author}{\bibinfo{person}{Eylon~E. Krause}.}
+  \bibinfo{year}{2026}\natexlab{}.
+\newblock \bibinfo{title}{{Shiftfly}: Simulator, Proofs and Reproduction
+  Artefacts}.
+\newblock
+  \bibinfo{howpublished}{\url{https://github.com/EylonKrause/shiftfly}}.
+\newblock
+
+
+\bibitem[Lakhotia et~al\mbox{.}(2022)]%
+        {lakhotia2022polarfly}
+\bibfield{author}{\bibinfo{person}{Kartik Lakhotia}, \bibinfo{person}{Maciej
+  Besta}, \bibinfo{person}{Laura Monroe}, \bibinfo{person}{Kelly Isham},
+  \bibinfo{person}{Patrick Iff}, \bibinfo{person}{Torsten Hoefler}, {and}
+  \bibinfo{person}{Fabrizio Petrini}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{{PolarFly}: A Cost-Effective and Flexible
+  Low-Diameter Topology}. In \bibinfo{booktitle}{\emph{Proceedings of the
+  International Conference for High Performance Computing, Networking, Storage
+  and Analysis (SC)}}.
+\newblock
+
+
+\bibitem[Lei et~al\mbox{.}(2020)]%
+        {lei2020bundlefly}
+\bibfield{author}{\bibinfo{person}{Fei Lei}, \bibinfo{person}{Dezun Dong},
+  \bibinfo{person}{Xiangke Liao}, {and} \bibinfo{person}{Jes\'{u}s Labarta}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{{Bundlefly}: A Low-Diameter Topology for Multicore
+  Fiber}. In \bibinfo{booktitle}{\emph{Proceedings of the 34th ACM
+  International Conference on Supercomputing (ICS)}}.
+\newblock
+
+
+\bibitem[Miller and \v{S}ir\'{a}\v{n}(2013)]%
+        {miller2013degdiam}
+\bibfield{author}{\bibinfo{person}{Mirka Miller} {and} \bibinfo{person}{Jozef
+  \v{S}ir\'{a}\v{n}}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Moore Graphs and Beyond: A Survey of the
+  Degree/Diameter Problem}.
+\newblock \bibinfo{journal}{\emph{The Electronic Journal of Combinatorics,
+  Dynamic Survey DS14}} (\bibinfo{year}{2013}).
+\newblock
+
+
+\bibitem[Poutievski et~al\mbox{.}(2022)]%
+        {poutievski2022jupiter}
+\bibfield{author}{\bibinfo{person}{Leon Poutievski}, \bibinfo{person}{Omid
+  Mashayekhi}, \bibinfo{person}{Joon Ong}, \bibinfo{person}{Arjun Singh},
+  \bibinfo{person}{Mukarram Tariq}, \bibinfo{person}{Rui Wang},
+  \bibinfo{person}{Jianan Zhang}, \bibinfo{person}{Virginia Beauregard},
+  \bibinfo{person}{Patrick Conner}, \bibinfo{person}{Steve Gribble},
+  \bibinfo{person}{Rishi Kapoor}, \bibinfo{person}{Stephen Kratzer},
+  \bibinfo{person}{Nanfang Li}, \bibinfo{person}{Hong Liu},
+  \bibinfo{person}{Karthik Nagaraj}, \bibinfo{person}{Jason Ornstein},
+  \bibinfo{person}{Samir Sawhney}, \bibinfo{person}{Ryohei Urata},
+  \bibinfo{person}{Lorenzo Vicisano}, \bibinfo{person}{Kevin Yasumura},
+  \bibinfo{person}{Shidong Zhang}, \bibinfo{person}{Junlan Zhou}, {and}
+  \bibinfo{person}{Amin Vahdat}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Jupiter Evolving: Transforming Google's Datacenter
+  Network via Optical Circuit Switches and Software-Defined Networking}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the ACM SIGCOMM Conference}}.
+\newblock
+
+
+\bibitem[Qin et~al\mbox{.}(2025)]%
+        {qin2025mooncake}
+\bibfield{author}{\bibinfo{person}{Ruoyu Qin}, \bibinfo{person}{Zheming Li},
+  \bibinfo{person}{Weiran He}, \bibinfo{person}{Mingxing Zhang},
+  \bibinfo{person}{Yongwei Wu}, \bibinfo{person}{Weimin Zheng}, {and}
+  \bibinfo{person}{Xinran Xu}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{{Mooncake}: A {KVCache}-Centric Disaggregated
+  Architecture for {LLM} Serving}. In \bibinfo{booktitle}{\emph{USENIX
+  Conference on File and Storage Technologies (FAST)}}.
+\newblock
+
+
+\bibitem[Reddy et~al\mbox{.}(1980)]%
+        {reddy1980}
+\bibfield{author}{\bibinfo{person}{S.~M. Reddy}, \bibinfo{person}{D.~K.
+  Pradhan}, {and} \bibinfo{person}{J.~G. Kuhl}.}
+  \bibinfo{year}{1980}\natexlab{}.
+\newblock \showarticletitle{Directed Graphs with Minimal Diameter and Maximal
+  Connectivity}.
+\newblock \bibinfo{journal}{\emph{School of Engineering Technical Report,
+  Oakland University}} (\bibinfo{year}{1980}).
+\newblock
+
+
+\bibitem[Shazeer et~al\mbox{.}(2017)]%
+        {shazeer2017moe}
+\bibfield{author}{\bibinfo{person}{Noam Shazeer}, \bibinfo{person}{Azalia
+  Mirhoseini}, \bibinfo{person}{Krzysztof Maziarz}, \bibinfo{person}{Andy
+  Davis}, \bibinfo{person}{Quoc Le}, \bibinfo{person}{Geoffrey Hinton}, {and}
+  \bibinfo{person}{Jeff Dean}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Outrageously Large Neural Networks: The
+  Sparsely-Gated Mixture-of-Experts Layer}. In
+  \bibinfo{booktitle}{\emph{International Conference on Learning
+  Representations (ICLR)}}.
+\newblock
+
+
+\bibitem[Valiant(1982)]%
+        {valiant1982}
+\bibfield{author}{\bibinfo{person}{Leslie~G. Valiant}.}
+  \bibinfo{year}{1982}\natexlab{}.
+\newblock \showarticletitle{A Scheme for Fast Parallel Communication}.
+\newblock \bibinfo{journal}{\emph{SIAM J. Comput.}} \bibinfo{volume}{11},
+  \bibinfo{number}{2} (\bibinfo{year}{1982}).
+\newblock
+
+
+\bibitem[Wang et~al\mbox{.}(2023)]%
+        {wang2023selfconsistency}
+\bibfield{author}{\bibinfo{person}{Xuezhi Wang}, \bibinfo{person}{Jason Wei},
+  \bibinfo{person}{Dale Schuurmans}, \bibinfo{person}{Quoc Le},
+  \bibinfo{person}{Ed Chi}, \bibinfo{person}{Sharan Narang},
+  \bibinfo{person}{Aakanksha Chowdhery}, {and} \bibinfo{person}{Denny Zhou}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Self-Consistency Improves Chain of Thought
+  Reasoning in Language Models}. In \bibinfo{booktitle}{\emph{International
+  Conference on Learning Representations (ICLR)}}.
+\newblock
+
+
+\bibitem[Zheng et~al\mbox{.}(2024)]%
+        {zheng2024sglang}
+\bibfield{author}{\bibinfo{person}{Lianmin Zheng}, \bibinfo{person}{Liangsheng
+  Yin}, \bibinfo{person}{Zhiqiang Xie}, \bibinfo{person}{Chuyue Sun},
+  \bibinfo{person}{Jeff Huang}, \bibinfo{person}{Cody~Hao Yu},
+  \bibinfo{person}{Shiyi Cao}, \bibinfo{person}{Christos Kozyrakis},
+  \bibinfo{person}{Ion Stoica}, \bibinfo{person}{Joseph~E. Gonzalez},
+  \bibinfo{person}{Clark Barrett}, {and} \bibinfo{person}{Ying Sheng}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{{SGLang}: Efficient Execution of Structured
+  Language Model Programs}. In \bibinfo{booktitle}{\emph{Advances in Neural
+  Information Processing Systems (NeurIPS)}}.
+\newblock
+
+
+\end{thebibliography}

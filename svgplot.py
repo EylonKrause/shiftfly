@@ -100,13 +100,17 @@ def line_chart(t: Theme, title: str, subtitle: str, xs: Sequence[float],
                y_zero: bool = True, fmt: str = "{:.0f}",
                width: float = 780, height: float = 470) -> Canvas:
     import math
-    c = Canvas(width, height, t, title)
-    L, R, T, B = 78, 34, 96, 86
+    c = Canvas(width, height, t, title or y_title)
+    # a figure destined for a paper carries its title in the LaTeX caption, so
+    # drawing one here would duplicate it; drop the header band instead
+    bare = not title
+    L, R, T, B = 78, 34, (30 if bare else 96), 86
     pw, ph = width - L - R, height - T - B
 
-    c.text(40, 44, title, t.primary, 19, weight=600)
-    if subtitle:
-        c.text(40, 68, subtitle, t.secondary, 12.5)
+    if not bare:
+        c.text(40, 44, title, t.primary, 19, weight=600)
+        if subtitle:
+            c.text(40, 68, subtitle, t.secondary, 12.5)
 
     fx = [math.log10(x) if log_x else x for x in xs]
     x0, x1 = min(fx), max(fx)
@@ -169,13 +173,15 @@ def grouped_bars(t: Theme, title: str, subtitle: str,
                  series: Sequence[tuple[str, Sequence[float]]],
                  y_title: str, fmt: str = "{:.2f}",
                  width: float = 780, height: float = 470) -> Canvas:
-    c = Canvas(width, height, t, title)
-    L, R, T, B = 78, 34, 96, 92
+    c = Canvas(width, height, t, title or y_title)
+    bare = not title
+    L, R, T, B = 78, 34, (30 if bare else 96), 92
     pw, ph = width - L - R, height - T - B
 
-    c.text(40, 44, title, t.primary, 19, weight=600)
-    if subtitle:
-        c.text(40, 68, subtitle, t.secondary, 12.5)
+    if not bare:
+        c.text(40, 44, title, t.primary, 19, weight=600)
+        if subtitle:
+            c.text(40, 68, subtitle, t.secondary, 12.5)
 
     hi = max(v for _, ys in series for v in ys) * 1.18 or 1.0
     ticks = 5
