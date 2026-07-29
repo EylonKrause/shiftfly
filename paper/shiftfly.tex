@@ -6,8 +6,15 @@
 \usepackage{balance}
 \usepackage{graphicx}
 
-\settopmatter{printacmref=false}
+% Resolves both from the repository (figures live one level up) and from a
+% flattened arXiv tarball (figures sit beside the source).
+\graphicspath{{../figures/}{figures/}{./}}
+
+\settopmatter{printacmref=false, printfolios=true}
 \renewcommand\footnotetextcopyrightpermission[1]{}
+\setcopyright{none}
+\acmDOI{}
+\acmISBN{}
 
 % acmart supplies theorem/lemma/proposition/definition/corollary, but creates
 % their counters at \begin{document}, so these must be deferred to share them.
@@ -27,6 +34,11 @@
 
 \title{Shiftfly: Scaling the Accelerator Interconnect Past the Pod with a
        Shift-Routed Optical Tier}
+\titlenote{Preprint, version 1.0, 29 July 2026. Not peer reviewed. Simulator,
+proofs and reproduction artefacts: \url{https://github.com/EylonKrause/shiftfly}
+(commit tagged \texttt{v1.0}). This work uses no proprietary information; every
+figure describing a shipped system is drawn from public announcements, and
+quantities inferred rather than published are marked as inferred.}
 
 \author{Eylon E. Krause}
 \affiliation{%
@@ -162,9 +174,13 @@ as inferred.
 \subsection{The torus era}
 
 \begin{definition}[$k$-ary $n$-cube]
-For $k_1,\dots,k_n \ge 2$, the torus $T(k_1,\dots,k_n)$ is the Cayley graph of
-$\Z_{k_1}\times\cdots\times\Z_{k_n}$ with generating set
-$\{\pm e_1,\dots,\pm e_n\}$.
+The torus $T(k_1,\dots,k_n)$, with every $k_i \ge 2$, is the
+Cayley graph of
+\[
+  \Z_{k_1}\times\cdots\times\Z_{k_n}
+  \quad\text{with generators}\quad
+  \{\pm e_1,\dots,\pm e_n\}.
+\]
 \end{definition}
 
 \begin{proposition}
@@ -262,9 +278,10 @@ Equality demands a Moore graph, and these exist only for $D=1$, for cycles, and
 for $D=2$ with $\Delta\in\{3,7,57\}$~\cite{hoffman1960}. The bound is a ceiling,
 so the informative quantity is the ratio to it. At $\Delta=7$:
 \[
-\text{Moore}(7,4)=1{,}814,\quad
-\text{Moore}(7,6)=65{,}318,\quad
-\text{Moore}(7,7)=391{,}910 .
+\begin{aligned}
+\text{Moore}(7,4) &= 1{,}814, &\quad \text{Moore}(7,6) &= 65{,}318,\\
+\text{Moore}(7,5) &= 10{,}886, &\quad \text{Moore}(7,7) &= 391{,}910.
+\end{aligned}
 \]
 
 \begin{observation}
@@ -296,7 +313,7 @@ that bounds its size.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.88\textwidth]{../figures/hierarchy.png}
+\includegraphics[width=0.88\textwidth]{hierarchy.png}
 \caption{Shiftfly changes exactly one tier. The building block and the group are
 Boardfly's, unchanged; only the global tier is replaced, and it rides the
 optical circuit switch that already exists.}
@@ -358,7 +375,7 @@ edge counts agree to within $5\%$ at each scale.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.88\textwidth]{../figures/routing.png}
+\includegraphics[width=0.88\textwidth]{routing.png}
 \caption{Shift routing on $K(2,2)$, with the two-hop route $01\to12\to20$. The
 destination label is the route: no table is consulted and no protocol
 converges.}
@@ -394,8 +411,11 @@ to prefer it to de~Bruijn here.
 \label{thm:shift}
 Let $\ell$ be the length of the longest suffix of $u$ that is a prefix of $v$,
 and $k=D-\ell$. Then
-$w^{(j)} = u_{j+1}\cdots u_D\, v_{\ell+1}\cdots v_{\ell+j}$, $j=0,\dots,k$, is a
-walk from $u$ to $v$ of length $k$, and $k=\dist(u,v)$.
+\[
+  w^{(j)} \;=\; u_{j+1}\cdots u_D\, v_{\ell+1}\cdots v_{\ell+j},
+  \qquad j=0,\dots,k,
+\]
+is a walk from $u$ to $v$ of length $k$, and $k=\dist(u,v)$.
 \end{theorem}
 
 \begin{proof}
@@ -502,7 +522,7 @@ check.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{../figures/paper_diameter.png}
+\includegraphics[width=\columnwidth]{paper_diameter.png}
 \caption{Chip-level worst-case distance at equal optical cost. Boardfly is
 better at pod scale; the crossing is the result.}
 \label{fig:diam}
@@ -540,7 +560,7 @@ symbol. Both curves are step functions, so the advantage is not monotone.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{../figures/paper_gap.png}
+\includegraphics[width=\columnwidth]{paper_gap.png}
 \caption{Spectral gap of the group graph. A hierarchy of near-cliques joined by
 few links expands poorly whatever its diameter.}
 \label{fig:gap}
@@ -560,7 +580,7 @@ Shiftfly here, and would not against a flat high-radix fabric.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{../figures/paper_sharing.png}
+\includegraphics[width=\columnwidth]{paper_sharing.png}
 \caption{Cost of serving one shared item to $32$ agents, in tree hops per
 requester. Placement does most of the work, on both topologies.}
 \label{fig:sharing}
