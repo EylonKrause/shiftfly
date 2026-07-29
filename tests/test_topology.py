@@ -227,6 +227,70 @@ class TestFairComparison(unittest.TestCase):
         self.assertLess(chip_hops(dbf), chip_hops(dsf))
 
 
+class TestOperations(unittest.TestCase):
+    """The 'at least as convenient as Boardfly' claim, as assertions."""
+
+    def setUp(self):
+        from topology.operations import (slice_quality, swap_cost,
+                                         wiring_state_bits)
+        self.swap_cost = swap_cost
+        self.wiring_state_bits = wiring_state_bits
+        self.slice_quality = slice_quality
+        self.n = 2304
+        self.bf = boardfly_group_level(self.n)
+        self.sf = shiftfly_group_level(self.n, GROUP_OPTICAL_PORTS)
+
+    def test_replacing_a_group_costs_the_same_budget(self):
+        """Swap cost is the degree, and both designs share one port budget.
+
+        Neither is exactly regular: Shiftfly loses a port on the thin set of
+        vertices carrying a bidirectional pair, and Boardfly loses one wherever
+        an inter-pod stub failed to pair. The claim is that the *budget* binds
+        both, and that the mean cost is within a few percent.
+        """
+        from topology.operations import mean_swap_cost
+        for v in (0, 7, 101, 999):
+            for g in (self.bf, self.sf):
+                s = self.swap_cost(g, v)
+                self.assertLessEqual(s.circuits, GROUP_OPTICAL_PORTS)
+                self.assertEqual(s.circuits, s.peers)
+        a, b = mean_swap_cost(self.bf), mean_swap_cost(self.sf)
+        self.assertLess(abs(a - b) / a, 0.05,
+                        "mean replacement cost differs by more than 5%")
+
+    def test_swap_never_exceeds_the_port_budget(self):
+        for g in (self.bf, self.sf):
+            for v in (0, 55, 1234):
+                self.assertLessEqual(self.swap_cost(g, v).circuits,
+                                     GROUP_OPTICAL_PORTS)
+
+    def test_shiftfly_needs_no_wiring_table(self):
+        bits_bf = self.wiring_state_bits(self.bf, self.n)
+        bits_sf = self.wiring_state_bits(self.sf, self.n)
+        self.assertLess(bits_sf, 128)
+        self.assertGreater(bits_bf, 100 * bits_sf)
+
+    def test_naive_slices_are_bad_and_we_say_so(self):
+        """The honest failure: an arbitrary induced subset is not a slice."""
+        q = self.slice_quality(self.n, 128, GROUP_OPTICAL_PORTS)
+        self.assertFalse(q.naive_connected)
+
+    def test_reinstantiated_slices_meet_the_guarantee(self):
+        for m in (16, 64, 256):
+            q = self.slice_quality(self.n, m, GROUP_OPTICAL_PORTS)
+            self.assertLessEqual(q.reinstantiated_diameter, q.guaranteed)
+
+    def test_boardfly_wins_small_slices(self):
+        from topology.operations import boardfly_slice_diameter
+        self.assertEqual(boardfly_slice_diameter(16), 1)
+        self.assertEqual(boardfly_slice_diameter(36), 1)
+
+    def test_shiftfly_defined_at_every_order(self):
+        from topology.operations import growth_step
+        for n in (37, 100, 1153, 5000):
+            self.assertTrue(growth_step(n)["shiftfly_defined_at_this_order"])
+
+
 class TestMetrics(unittest.TestCase):
     def test_multicast_tree_never_exceeds_unicast(self):
         g = kautz(4, 3)

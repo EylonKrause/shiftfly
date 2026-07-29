@@ -154,9 +154,55 @@ reading of the objective — inverts the conclusion.
   merging before the destination. It must be bought with a locality-aware
   labelling, and that is the co-design step whose measured value is the 2.9% above.
 
+## Can it actually be operated?
+
+Shiftfly is a drop-in replacement for **one tier** of a machine that already
+exists, so the bar is that servicing, allocating and growing it must be at least
+as convenient as Boardfly. Measured, not assumed:
+
+| Question | Boardfly | Shiftfly |
+|---|---|---|
+| **Replacing a failed group** | 40 optical circuits, 40 peers | 40 optical circuits, 40 peers — **tie** |
+| Control-plane work to do it | look up the group's peer list | none: the label *is* the neighbour set |
+| **State to derive the global wiring** | 550,000 bits | **28 bits** |
+| **Growth** | defined at multiples of a pod; crossing 36 groups adds a tier | defined at **every** order |
+| Intra-group collectives (incl. the collectives engine) | — | **unchanged**, the local tiers are Boardfly's |
+| **Slice allocation** | any subset of a complete tier is complete — **zero cost** | must be *instantiated*, not carved |
+
+**Field replacement is a tie by construction.** In both designs the replacement
+inherits the identity of the unit it replaces and the OCS re-points that
+identity's fibres, so the cost is just the degree and the same 40-port budget
+binds both. Nothing about a shift-routed tier makes a chip, tray or group harder
+to pull.
+
+**Slice allocation is the one real regression, and it's in the paper as such.**
+An arbitrary induced subset of a shift graph is **disconnected at every size we
+tested** — you cannot carve a slice out of it. You can *instantiate* one:
+because the tier is a permutation on an OCS and Imase–Itoh exists at every
+order, a slice of $m$ groups gets its own correctly sized shift graph with the
+$\lceil\log_d m\rceil$ guarantee intact.
+
+| Slice (groups) | Chips | Boardfly | SF naive | SF instantiated |
+|---|---|---|---|---|
+| 16 | 512 | **1** | disconnected | **1** |
+| 36 | 1,152 | **1** | disconnected | 2 |
+| 128 | 4,096 | 3 | disconnected | **2** |
+| 512 | 16,384 | 4 | disconnected | **3** |
+| 2,048 | 65,536 | 4 | disconnected | **3** |
+
+So Shiftfly slices are *better* from 128 groups up, at the cost of **one OCS
+reconfiguration per allocation** that Boardfly avoids inside a single pod. That
+is acceptable only because it matches how the machine is already run —
+reconfiguration is milliseconds to seconds and happens at job-scheduling time,
+against job lifetimes of minutes to days. **A fleet dominated by small,
+short-lived, in-pod slices should keep Boardfly.**
+
 ## Known flaws
 
 1. **Boardfly is better at one-pod scale.** 7 vs 11 chip hops at 1,152 chips.
+2. **Slices must be instantiated, not carved.** An arbitrary induced subset is
+   disconnected; allocation costs one OCS reconfiguration that Boardfly avoids
+   in-pod.
 2. **Bisection.** de Bruijn/Kautz families have bisection $\Theta(N/\log N)$
    against $\Theta(N)$ for a complete or expander tier. Shiftfly wins against a
    *hierarchy* because hierarchies expand badly; against a flat high-radix

@@ -48,6 +48,43 @@ Workload: 32 agents per query, 64 affinity clusters, scheduler locality 85%, Zip
 
 **Reading it honestly.** Locality-aware placement cuts tree cost by 21% on Boardfly and 14% on Shiftfly -- so most of the redundancy win is *placement*, which any topology can do, not algebra. Shiftfly's own contribution is the residual: 2.8% lower tree cost than Boardfly at matched placement, and merge depth 2.15 against 2.34. Note also that the efficiency *ratio* ranks Boardfly higher (1.431 vs 1.364) while absolute cost ranks it lower -- which is exactly the trap that metric sets.
 
+## 3b. Deployment and operations
+A topology that is better on paper and worse to run is not better. Four operational questions, measured on a 12,500-group (400,000-chip) machine.
+
+### Replacing a failed group
+
+| Design | Circuits (typical) | Circuits (mean) | Peers disturbed | Control-plane work |
+|---|---|---|---|---|
+| boardfly | 40 | 40.0 | 40 | look up the group's recorded peer list |
+| shiftfly | 40 | 40.0 | 40 | none: the label determines the neighbour set arithmetically |
+
+**The same.** In both designs the replacement inherits the identity of the unit it replaces and the OCS re-points that identity's fibres, so the cost is simply the degree, and the same 40-port budget binds both. Neither is exactly regular -- Shiftfly loses a port on the thin set of vertices carrying a bidirectional pair, Boardfly wherever an inter-pod stub failed to pair -- but the means agree to within a few percent. The difference is that Shiftfly need not *look anything up*: the neighbour set of a label is a shift of it.
+
+### Control-plane state for the global wiring
+
+| Design | State |
+|---|---|
+| boardfly | 550,000 bits |
+| shiftfly | 28 bits |
+
+Boardfly's intra-pod tier is derivable (a complete graph needs only pod membership), but its inter-pod tier has no closed form and must be tabulated. Shiftfly's entire global tier follows from two integers. Boardfly could of course adopt a *structured* inter-pod tier instead -- which is essentially the proposal of this paper.
+
+### Slice allocation
+
+Group-level diameter of a slice, by size. `SF naive` takes an arbitrary subset of the deployed fabric and uses whichever links fall inside it; `SF re-instantiated` installs a correctly sized shift permutation over exactly those groups, which is available because the global tier is a permutation on an OCS and Imase--Itoh exists at every order.
+
+| Slice (groups) | Chips | Boardfly | SF naive | SF re-instantiated | SF guarantee |
+|---|---|---|---|---|---|
+| 16 | 512 | 1 | disconnected | 1 | 1 |
+| 36 | 1,152 | 1 | disconnected | 2 | 2 |
+| 128 | 4,096 | 3 | disconnected | 2 | 2 |
+| 512 | 16,384 | 4 | disconnected | 3 | 3 |
+| 2,048 | 65,536 | 4 | disconnected | 3 | 3 |
+
+**This is the one place Shiftfly is operationally worse, and the table says so.** An arbitrary induced subset of a shift graph is disconnected at every size tested -- slices cannot simply be carved out. They must be *instantiated*, which costs one OCS reconfiguration per allocation. Within a single pod Boardfly needs none, because any subset of a complete tier is already complete. Beyond one pod both designs must establish circuits anyway.
+
+The trade is acceptable only because it matches how the machine is already operated: OCS reconfiguration takes milliseconds to seconds and happens at job-scheduling time, against job lifetimes of 30 minutes to days. Given that, Shiftfly slices are *better* from 128 groups upward, and every slice is a correctly sized fabric in its own right rather than a fragment of a larger one.
+
 ## 4. Link failures
 Independent link drops on a 2,304-group instance; reachability and distance measured from 60 random sources.
 

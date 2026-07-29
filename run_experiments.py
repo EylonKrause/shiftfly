@@ -221,6 +221,87 @@ def experiment_sharing() -> tuple[str, dict]:
 
 
 # --------------------------------------------------------------------------
+# 3b. deployment and operations
+# --------------------------------------------------------------------------
+
+def experiment_operations() -> str:
+    from topology.operations import (boardfly_slice_diameter, slice_quality,
+                                     swap_cost, wiring_state_bits)
+    n_groups = 12500
+    bf = boardfly_group_level(n_groups)
+    sf = shiftfly_group_level(n_groups, PORTS)
+
+    body = ["\n## 3b. Deployment and operations\n",
+            "A topology that is better on paper and worse to run is not "
+            "better. Four operational questions, measured on a 12,500-group "
+            "(400,000-chip) machine.\n",
+            "\n### Replacing a failed group\n\n"]
+    from topology.operations import mean_swap_cost
+    rows = []
+    for g in (bf, sf):
+        s = swap_cost(g, 17)
+        rows.append([g.meta["family"], s.circuits,
+                     f"{mean_swap_cost(g):.1f}", s.peers, s.recompute])
+    body.append(md_table(
+        ["Design", "Circuits (typical)", "Circuits (mean)", "Peers disturbed",
+         "Control-plane work"], rows))
+    body.append(
+        "\n**The same.** In both designs the replacement inherits the identity "
+        "of the unit it replaces and the OCS re-points that identity's fibres, "
+        "so the cost is simply the degree, and the same 40-port budget binds "
+        "both. Neither is exactly regular -- Shiftfly loses a port on the thin "
+        "set of vertices carrying a bidirectional pair, Boardfly wherever an "
+        "inter-pod stub failed to pair -- but the means agree to within a few "
+        "percent. The difference is that Shiftfly need not *look anything up*: "
+        "the neighbour set of a label is a shift of it.\n")
+
+    body.append("\n### Control-plane state for the global wiring\n\n")
+    rows = [[g.meta["family"], f"{wiring_state_bits(g, n_groups):,} bits"]
+            for g in (bf, sf)]
+    body.append(md_table(["Design", "State"], rows))
+    body.append(
+        "\nBoardfly's intra-pod tier is derivable (a complete graph needs only "
+        "pod membership), but its inter-pod tier has no closed form and must be "
+        "tabulated. Shiftfly's entire global tier follows from two integers. "
+        "Boardfly could of course adopt a *structured* inter-pod tier instead "
+        "-- which is essentially the proposal of this paper.\n")
+
+    body.append(
+        "\n### Slice allocation\n\n"
+        "Group-level diameter of a slice, by size. `SF naive` takes an "
+        "arbitrary subset of the deployed fabric and uses whichever links fall "
+        "inside it; `SF re-instantiated` installs a correctly sized shift "
+        "permutation over exactly those groups, which is available because the "
+        "global tier is a permutation on an OCS and Imase--Itoh exists at "
+        "every order.\n\n")
+    rows = []
+    for m in (16, 36, 128, 512, 2048):
+        q = slice_quality(n_groups, m, PORTS)
+        naive = "disconnected" if not q.naive_connected else str(q.naive_diameter)
+        rows.append([f"{m:,}", f"{m*GROUP_CHIPS:,}",
+                     boardfly_slice_diameter(m), naive,
+                     q.reinstantiated_diameter, q.guaranteed])
+    body.append(md_table(
+        ["Slice (groups)", "Chips", "Boardfly", "SF naive",
+         "SF re-instantiated", "SF guarantee"], rows))
+    body.append(
+        "\n**This is the one place Shiftfly is operationally worse, and the "
+        "table says so.** An arbitrary induced subset of a shift graph is "
+        "disconnected at every size tested -- slices cannot simply be carved "
+        "out. They must be *instantiated*, which costs one OCS reconfiguration "
+        "per allocation. Within a single pod Boardfly needs none, because any "
+        "subset of a complete tier is already complete. Beyond one pod both "
+        "designs must establish circuits anyway.\n\n"
+        "The trade is acceptable only because it matches how the machine is "
+        "already operated: OCS reconfiguration takes milliseconds to seconds "
+        "and happens at job-scheduling time, against job lifetimes of "
+        "30 minutes to days. Given that, Shiftfly slices are *better* from 128 "
+        "groups upward, and every slice is a correctly sized fabric in its own "
+        "right rather than a fragment of a larger one.\n")
+    return "".join(body)
+
+
+# --------------------------------------------------------------------------
 # 4. fault tolerance
 # --------------------------------------------------------------------------
 
@@ -349,6 +430,7 @@ def main() -> None:
     parts.append(scale_md)
     share_md, sharing = experiment_sharing()
     parts.append(share_md)
+    parts.append(experiment_operations())
     fault_md, _ = experiment_faults()
     parts.append(fault_md)
     (RES / "results.md").write_text("".join(parts), encoding="utf-8")

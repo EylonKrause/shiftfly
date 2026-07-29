@@ -63,6 +63,14 @@ $21.5\%$ and $14.5\%$ of the achievable saving on shared content on the two
 topologies respectively, leaving the shift algebra a residual of $2.9\%$. We
 report the metric inversion that conceals this, and conclude that the defensible
 case for Shiftfly is scaling and expansion rather than deduplication.
+
+Because Shiftfly is proposed as a drop-in replacement for one tier of an
+existing machine, we also measure whether it can be operated. Replacing a failed
+group costs the same $40$ optical circuits in both designs; deriving the global
+wiring costs $28$ bits of control-plane state against $550{,}000$. Slice
+allocation is the one regression: an arbitrary induced subset of a shift graph
+is disconnected, so slices must be instantiated rather than carved, at a cost of
+one switch reconfiguration per allocation.
 \end{abstract}
 
 \begin{CCSXML}
@@ -136,6 +144,10 @@ simulator whose Boardfly model reproduces the published diameter of~$7$
 argument that motivated the design is dominated by locality-aware placement,
 which is topology-agnostic. We also identify a metric inversion that would have
 concealed this had we reported the natural efficiency ratio alone.
+\item We measure whether the design can be \textbf{operated}
+(\S\ref{sec:ops})---field replacement, control-plane state, slice allocation and
+growth---rather than assuming it. Field replacement ties; slice allocation is a
+genuine regression that we quantify and bound.
 \end{itemize}
 
 All code, proofs and artefacts are public~\cite{krause2026shiftfly}. No
@@ -606,12 +618,139 @@ a sharing objective---we would have drawn the opposite conclusion.
 \end{remark}
 
 %======================================================================
+\section{Deployment and operations}
+\label{sec:ops}
+
+A topology that is better on paper and worse to run is not better. Shiftfly is
+proposed as a drop-in replacement for one tier of a machine that already exists,
+so the bar is concrete: servicing, allocating and growing it must be at least as
+convenient as Boardfly. This section measures four such questions on a
+$12{,}500$-group ($400{,}000$-chip) configuration. Three of the four favour
+Shiftfly or tie; one does not, and we give it its own subsection.
+
+\subsection{Replacing a failed group}
+
+In both designs a replacement unit \emph{inherits the identity} of the unit it
+replaces, and the optical circuit switch re-points that identity's fibres at the
+new hardware. The cost is therefore just the degree, and the same $40$-port
+budget binds both: $40$ circuits re-established, $40$ peers disturbed, in each
+case. Neither design is exactly regular---Shiftfly loses a port on the thin set
+of vertices carrying a bidirectional pair (Proposition~\ref{prop:ports}),
+Boardfly wherever an inter-pod stub fails to pair---but the mean costs agree to
+within a few percent.
+
+\textbf{Field replacement is therefore a tie, by construction rather than by
+luck.} Nothing about a shift-routed tier makes a chip, tray or group harder to
+pull. What differs is that Shiftfly need not \emph{look anything up}: the
+neighbour set of a label is a shift of that label, so the technician's work
+order and the control plane's reconciliation are the same in both designs while
+the state behind them is not.
+
+\subsection{Control-plane state}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lr}
+\toprule
+Design & State for the global wiring \\
+\midrule
+Boardfly & $550{,}000$ bits \\
+Shiftfly & $28$ bits \\
+\bottomrule
+\end{tabular}
+\caption{State the control plane must hold to derive which groups are wired to
+which, at $12{,}500$ groups.}
+\label{tab:state}
+\end{table}
+
+Boardfly's intra-pod tier is derivable---a complete graph needs only pod
+membership---but its inter-pod tier has no closed form and must be tabulated.
+Shiftfly's entire global tier follows from the pair $(n,d)$, because
+Theorem~\ref{thm:shift} makes adjacency arithmetic. Table~\ref{tab:state} gives
+the resulting difference of four orders of magnitude.
+
+We do not oversell this. Boardfly could adopt a \emph{structured} inter-pod tier
+and recover most of the gap---but a structured global tier over an OCS is
+essentially the proposal of this paper.
+
+\subsection{Slice allocation: where Shiftfly is worse}
+\label{sec:slices}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{rrccc}
+\toprule
+Slice & Chips & Boardfly & SF naive & SF instantiated \\
+\midrule
+16 & 512 & \textbf{1} & disconn. & \textbf{1} \\
+36 & 1{,}152 & \textbf{1} & disconn. & 2 \\
+128 & 4{,}096 & 3 & disconn. & \textbf{2} \\
+512 & 16{,}384 & 4 & disconn. & \textbf{3} \\
+2{,}048 & 65{,}536 & 4 & disconn. & \textbf{3} \\
+\bottomrule
+\end{tabular}
+\caption{Group-level diameter of an allocated slice. An arbitrary induced subset
+of a shift graph is disconnected at every size tested.}
+\label{tab:slices}
+\end{table}
+
+Google allocates slices of a pod to jobs, and slices must be isolated and
+internally well connected. Here Boardfly has a structural advantage that
+Shiftfly cannot match directly: \emph{any} subset of a complete tier is itself
+complete, so a slice of up to $36$ groups is carved out at zero cost and with
+diameter $1$, requiring no reconfiguration at all.
+
+The corresponding naive operation on Shiftfly---take an arbitrary subset and use
+whichever links fall inside it---fails badly. Table~\ref{tab:slices} shows the
+induced subgraph is \textbf{disconnected at every size we tested}. Slices cannot
+be carved out of a shift graph.
+
+They can, however, be \emph{instantiated}. Because the global tier is a
+permutation installed on an optical circuit switch, and because the Imase--Itoh
+construction exists at every order, a slice of $m$ groups can be given its own
+correctly sized shift permutation. Every slice is then a fabric in its own right
+rather than a fragment of a larger one, with the diameter guarantee
+$\lceil\log_d m\rceil$ intact. On those terms Shiftfly slices are \emph{better}
+than Boardfly's from $128$ groups ($4{,}096$ chips) upward, where Boardfly's own
+slice has had to become hierarchical.
+
+The cost is one OCS reconfiguration per allocation, which Boardfly avoids within
+a single pod. We regard this as acceptable, but only because it matches how the
+machine is already operated: MEMS reconfiguration takes milliseconds to seconds
+and happens at job-scheduling
+time~\cite{poutievski2022jupiter,jouppi2023tpuv4}, against job lifetimes of
+minutes to days, and any slice spanning more than one pod obliges Boardfly to
+establish inter-pod circuits anyway. A deployment that allocates many small,
+short-lived slices inside one pod should keep Boardfly.
+
+\subsection{Growth and software}
+
+Boardfly is defined at multiples of a pod; crossing $36$ groups introduces a
+hierarchy level rather than widening an existing one. Shiftfly is defined at
+\emph{every} order, so a partially populated machine of $n$ groups is a valid
+fabric with the diameter its size warrants, and growth re-installs a
+permutation rather than restructuring a tier.
+
+The software change is bounded by construction, because the building block and
+the group are untouched. Every intra-group collective---including the
+latency-critical small reductions the collectives engine
+accelerates---sees an unchanged fabric. What changes is the inter-group
+collective schedule, which is topology-specific in any case, and the routing
+layer, which gets \emph{simpler}: there is no forwarding table to size, no
+protocol to converge, and no state to reconcile after a reconfiguration.
+
+%======================================================================
 \section{Discussion and limitations}
 \label{sec:limits}
 
 \paragraph{Boardfly is right at pod scale.} At $1{,}152$ chips a complete global
 tier is simply the correct answer, and our own measurements say so. Nothing here
 argues that TPU~8i should have been built differently.
+
+\paragraph{Slices must be instantiated, not carved.} An arbitrary induced subset
+of a shift graph is disconnected (\S\ref{sec:slices}). This is the one
+operational regression, it is real, and a fleet dominated by small short-lived
+in-pod slices should not adopt Shiftfly.
 
 \paragraph{Bisection.} De~Bruijn and Kautz families have asymptotically smaller
 bisection than a complete or expander tier~\cite{bermond1989debruijn}. We win
