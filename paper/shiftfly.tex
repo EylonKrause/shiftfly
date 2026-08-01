@@ -1,5 +1,21 @@
 \documentclass[sigconf,nonacm]{acmart}
 
+% ---------------------------------------------------------------------------
+% If your TeX installation dies with
+%
+%     Trying to make PK font t1-zi4r-4 at 420 DPI...
+%     ! pdfTeX error: pdflatex (file t1-zi4r-4): Font t1-zi4r-4 at 420 not found
+%
+% then acmart's typewriter font (Inconsolata, package zi4) is present without
+% working Type 1 outlines, so pdfTeX tries to build a bitmap instead and the
+% font generator fails.  That is an installation fault, not a fault in this
+% file.  Fix the installation if you can; otherwise uncomment the next line to
+% use Latin Modern Mono, which ships with every TeX distribution.  This paper
+% sets typewriter text in five places, so the difference is negligible.
+%
+% \renewcommand{\ttdefault}{lmtt}
+% ---------------------------------------------------------------------------
+
 % acmart already loads amsmath, amssymb and amsthm, and defines the theorem
 % environments used below.  Loading them again clashes on \Bbbk.
 \usepackage{booktabs}
@@ -887,6 +903,10 @@ evaluation: most of the available saving on shared content comes from placement,
 not from topology, and the natural metric for that objective inverts the
 ranking. We regard reporting this as more useful than the alternative.
 
+% Balances the final page's columns.  It emits "You have called \balance in
+% second column" -- harmless, and it appears with or without this call, since
+% acmart invokes balancing itself.  Removing it drops references from the
+% final column, so it stays.
 \balance
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{shiftfly}
