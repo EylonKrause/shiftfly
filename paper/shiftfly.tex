@@ -6,9 +6,12 @@
 \usepackage{balance}
 \usepackage{graphicx}
 
-% Resolves both from the repository (figures live one level up) and from a
-% flattened arXiv tarball (figures sit beside the source).
-\graphicspath{{../figures/}{figures/}{./}}
+% The paper's figures live in paper/figures/, so this directory is
+% self-contained.  No entry here escapes upward with "..", which MiKTeX
+% restricts by default and which was the original cause of "file not found".
+% The three entries cover being run from paper/, from the repository root, and
+% from a flattened arXiv tarball where the images sit beside the source.
+\graphicspath{{figures/}{paper/figures/}{./}}
 
 \settopmatter{printacmref=false, printfolios=true}
 \renewcommand\footnotetextcopyrightpermission[1]{}
@@ -41,17 +44,16 @@ figure describing a shipped system is drawn from public announcements, and
 quantities inferred rather than published are marked as inferred.}
 
 \author{Eylon E. Krause}
-% sigconf's compact author block does not typeset \postcode, so the codes are
-% carried in \city to keep them visible as well as semantically placed.
+% acmart deliberately discards \postcode ("ACM no longer collects authors'
+% postal addresses") and warns when one is given, so the codes are carried in
+% \city instead -- visible, and no warning.
 \affiliation{%
   \institution{Weizmann Institute of Science}
   \city{Rehovot (7610001)}
-  \postcode{7610001}
   \country{Israel}}
 \affiliation{%
   \institution{College of Management Academic Studies}
   \city{Rishon LeZion (7579806)}
-  \postcode{7579806}
   \country{Israel}}
 \email{eylonkr@colman.ac.il}
 
@@ -322,6 +324,12 @@ that bounds its size.
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.88\textwidth]{hierarchy.png}
+\Description{Four panels. The left two, labelled shared and unchanged, show a
+building block of four fully connected chips and a group of eight such blocks.
+The right two contrast the global tier: Boardfly's complete graph, needing G
+minus one ports to reach G groups, against Shiftfly's sparser shift graph
+needing 2d ports at diameter log-base-d of G. A footer states the consequence
+at 400,000 chips: 23 chip hops for Boardfly against 19 for Shiftfly.}
 \caption{Shiftfly changes exactly one tier. The building block and the group are
 Boardfly's, unchanged; only the global tier is replaced, and it rides the
 optical circuit switch that already exists.}
@@ -384,6 +392,11 @@ edge counts agree to within $5\%$ at each scale.
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.88\textwidth]{routing.png}
+\Description{The six vertices of the Kautz graph K(2,2), labelled 01, 02, 10,
+12, 20 and 21, arranged in a ring with directed arcs between them. The route
+from 01 to 12 to 20 is highlighted. Alongside, the arithmetic: the longest
+suffix of the source that prefixes the destination has length zero, so the
+route takes two hops, appending the destination symbols one per step.}
 \caption{Shift routing on $K(2,2)$, with the two-hop route $01\to12\to20$. The
 destination label is the route: no table is consulted and no protocol
 converges.}
@@ -531,6 +544,10 @@ check.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{paper_diameter.png}
+\Description{Worst-case chip hops against system size on a logarithmic axis,
+from 1,152 to 1,152,000 chips. Boardfly starts lower at 7 hops and rises in
+steps to 23. Shiftfly starts at 11 and rises to 19. The two curves cross near
+4,600 chips, after which Shiftfly is always at or below Boardfly.}
 \caption{Chip-level worst-case distance at equal optical cost. Boardfly is
 better at pod scale; the crossing is the result.}
 \label{fig:diam}
@@ -569,6 +586,10 @@ symbol. Both curves are step functions, so the advantage is not monotone.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{paper_gap.png}
+\Description{Spectral gap against system size on a logarithmic axis. Both
+curves fall as the machine grows, but Boardfly's collapses sharply once it
+exceeds a single pod and then stays near zero, while Shiftfly's declines
+gradually and remains roughly 2.7 times higher across the tested range.}
 \caption{Spectral gap of the group graph. A hierarchy of near-cliques joined by
 few links expands poorly whatever its diameter.}
 \label{fig:gap}
@@ -589,6 +610,11 @@ Shiftfly here, and would not against a flat high-radix fabric.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{paper_sharing.png}
+\Description{Four bars in two groups showing tree hops per requester. Under
+random placement Boardfly costs 2.768 and Shiftfly 2.470. Under locality-aware
+placement both fall sharply, to 2.174 and 2.112 respectively. The drop from
+changing placement is far larger than the remaining gap between the two
+topologies.}
 \caption{Cost of serving one shared item to $32$ agents, in tree hops per
 requester. Placement does most of the work, on both topologies.}
 \label{fig:sharing}

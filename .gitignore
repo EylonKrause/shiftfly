@@ -17,3 +17,4 @@ paper/*.synctex.gz
 
 # generated arXiv bundle
 paper/arxiv/
+paper/build.log

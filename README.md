@@ -18,8 +18,14 @@ and measures both honestly.
 > [LaTeX source](paper/shiftfly.tex) · [bibliography](paper/shiftfly.bib)
 >
 > ```
-> cd paper && pdflatex shiftfly && bibtex shiftfly && pdflatex shiftfly && pdflatex shiftfly
+> cd paper && sh build.sh
 > ```
+>
+> LaTeX resolves `\ref` and `\cite` across passes, so a **single** `pdflatex`
+> run always reports everything as undefined — that isn't an error, it means it
+> hasn't run enough times. `build.sh` does three passes and prints a summary.
+> `shiftfly.bbl` is committed, so BibTeX is optional; run `sh build.sh
+> --with-bibtex` only after editing `shiftfly.bib`.
 
 ```
 git clone https://github.com/EylonKrause/shiftfly

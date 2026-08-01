@@ -25,7 +25,7 @@ mkdir -p "$OUT/bundle"
 cp shiftfly.tex shiftfly.bbl "$OUT/bundle/"
 for f in $(grep -o 'includegraphics\[[^]]*\]{[^}]*}' shiftfly.tex \
            | sed 's/.*{\(.*\)}/\1/'); do
-  cp "../figures/$f" "$OUT/bundle/"
+  cp "figures/$f" "$OUT/bundle/"
 done
 
 # arXiv reads the compile order from 00README.XXX when there is ambiguity
