@@ -117,10 +117,9 @@
         {imase1983}
 \bibfield{author}{\bibinfo{person}{Makoto Imase} {and} \bibinfo{person}{Masaki
   Itoh}.} \bibinfo{year}{1983}\natexlab{}.
-\newblock \showarticletitle{A Design for Directed Graphs with Minimum
-  Diameter}.
-\newblock \bibinfo{journal}{\emph{IEEE Trans. Comput.}} \bibinfo{volume}{C-32},
-  \bibinfo{number}{8} (\bibinfo{year}{1983}).
+\newblock \showarticletitle{A Design for Directed Graph with Minimum Diameter}.
+\newblock \bibinfo{journal}{\emph{IEEE Trans. Comput.}}  \bibinfo{volume}{C-32}
+  (\bibinfo{year}{1983}), \bibinfo{pages}{782--784}.
 \newblock
 
 
@@ -267,10 +266,10 @@
 \bibfield{author}{\bibinfo{person}{S.~M. Reddy}, \bibinfo{person}{D.~K.
   Pradhan}, {and} \bibinfo{person}{J.~G. Kuhl}.}
   \bibinfo{year}{1980}\natexlab{}.
-\newblock \showarticletitle{Directed Graphs with Minimal Diameter and Maximal
-  Connectivity}.
-\newblock \bibinfo{journal}{\emph{School of Engineering Technical Report,
-  Oakland University}} (\bibinfo{year}{1980}).
+\newblock \bibinfo{booktitle}{\emph{Directed Graphs with Minimal Diameter and
+  Maximum Node Connectivity}}.
+\newblock \bibinfo{type}{{T}echnical {R}eport}. \bibinfo{institution}{School of
+  Engineering, Oakland University}.
 \newblock
 
 
