@@ -6,12 +6,19 @@
 \usepackage{balance}
 \usepackage{graphicx}
 
-% The paper's figures live in paper/figures/, so this directory is
-% self-contained.  No entry here escapes upward with "..", which MiKTeX
-% restricts by default and which was the original cause of "file not found".
-% The three entries cover being run from paper/, from the repository root, and
-% from a flattened arXiv tarball where the images sit beside the source.
-\graphicspath{{figures/}{paper/figures/}{./}}
+% Figure lookup, in priority order:
+%
+%   {./}              images sitting beside shiftfly.tex WIN.  Drop the PNGs
+%                     next to the source and figures/ is ignored entirely --
+%                     which is exactly how the flattened arXiv tarball builds.
+%   {figures/}        the repository layout, compiling from paper/.
+%   {paper/figures/}  the same, compiling from the repository root.
+%
+% \graphicspath is searched in order and resolves against the *working
+% directory*, so putting {./} first is what makes a same-directory image take
+% precedence.  Note that no entry escapes upward with "..": MiKTeX restricts
+% reading through .. by default, which was the original "file not found".
+\graphicspath{{./}{figures/}{paper/figures/}}
 
 \settopmatter{printacmref=false, printfolios=true}
 \renewcommand\footnotetextcopyrightpermission[1]{}
